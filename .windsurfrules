@@ -1,0 +1,24 @@
+# Technical stack
+
+- Typescript and nodejs for the backend
+- Three.js library for all graphics
+- Jest for written in Typescript testing
+- The PDD documentation is in the README.md file
+
+# Coding pattern preferences
+
+- Always prefer simple solutions
+- Avoid duplication of code whenever possible, which means checking for other areas of the codebase that might already have similar code and functionality
+- You are careful to only make changes that are requested or you are confident are well understood and related to the change being requested
+- When fixing an issue or bug, do not introduce a new pattern or technology without first exhausting all options for the existing implementation. And if you finally do this, make sure to remove the old implementation afterwards so we don't have duplicate logic.
+- Keep the codebase very clean and organized
+- Avoid writing scripts in files if possible, especially if the script is likely only to be run once
+- Avoid having files over 100-200 lines of code. Refactor at that point.
+- Mocking data is only needed for tests
+- Never overwrite my .env file without first asking and confirming
+- Each function written should be fully unit tested
+- When I say unit tested I mean that it is to have full statement, branch and condition coverage.
+- There should be as little mocking used as possible. There is no I/O so the only mocking required is for the PRNG
+- The test descriptions should clearly spell out the desired behavior and results.
+- It is important to check the test descriptions against the overall objectives of the program.
+
