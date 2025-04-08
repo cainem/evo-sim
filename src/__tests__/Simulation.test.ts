@@ -2,6 +2,7 @@ import { Config } from '../Config';
 import { WorldMap } from '../WorldMap';
 import { SeededRandom } from '../utils/SeededRandom';
 import { Simulation } from '../Simulation';
+import { Region } from '../Region';
 
 describe('Simulation', () => {
   let config: Config;
@@ -19,7 +20,23 @@ describe('Simulation', () => {
     });
     random = new SeededRandom(testSeed);
     worldMap = new WorldMap(config, random);
-    simulation = new Simulation(config, worldMap, random);
+    worldMap.generateHeightMap(); // Ensure height map is initialized
+    // Create test regions
+    const regions = [new Region({
+      startX: 0,
+      endX: config.worldSize,
+      startY: 0,
+      endY: config.worldSize
+    })];
+
+    // Set region statistics
+    regions[0].updateStatistics({
+      averageHeight: 50,
+      carryingCapacity: 25, // Fixed carrying capacity for testing
+      highestPoint: { x: 50, y: 50, height: 75 }
+    });
+
+    simulation = new Simulation(config, worldMap, random, regions);
   });
 
   describe('Initialization', () => {
@@ -77,9 +94,14 @@ describe('Simulation', () => {
 
     it('should increment round number after each round', () => {
       expect(simulation.getRoundNumber()).toBe(0);
-      simulation.runRound();
+      const result1 = simulation.runRound();
+      expect(result1.deaths).toBe(0);
+      expect(result1.births).toBe(10); // 10 initial organisms -> 10 eligible parents -> 10 births
       expect(simulation.getRoundNumber()).toBe(1);
-      simulation.runRound();
+      
+      const result2 = simulation.runRound();
+      expect(result2.deaths).toBe(0); // Assuming maxLifeSpan is high enough
+      expect(result2.births).toBe(20); // 20 organisms (10 aged + 10 new) -> 20 eligible -> 20 births (assuming capacity)
       expect(simulation.getRoundNumber()).toBe(2);
     });
 
@@ -92,9 +114,15 @@ describe('Simulation', () => {
       const newAges = simulation.getOrganisms()
         .map(org => org.getRoundsLived());
 
-      expect(newAges.length).toBe(initialAges.length);
-      for (let i = 0; i < newAges.length; i++) {
+      // After reproduction, we'll have more organisms
+      expect(newAges.length).toBe(initialAges.length * 2); // Each organism reproduces once
+      // Original organisms should be aged by 1
+      for (let i = 0; i < initialAges.length; i++) {
         expect(newAges[i]).toBe(initialAges[i] + 1);
+      }
+      // New organisms should start at 0
+      for (let i = initialAges.length; i < newAges.length; i++) {
+        expect(newAges[i]).toBe(0);
       }
     });
 
@@ -105,19 +133,47 @@ describe('Simulation', () => {
         startingOrganisms: 5,
         randomSeed: testSeed
       });
+      // Create a dedicated random generator for this test to ensure determinism
+      const testRandom = new SeededRandom(testSeed);
+      
+      const testRegions = [new Region({
+        startX: 0,
+        endX: shortLifeConfig.worldSize,
+        startY: 0,
+        endY: shortLifeConfig.worldSize
+      })];
+      
+      // Set region statistics
+      testRegions[0].updateStatistics({
+        averageHeight: 50,
+        carryingCapacity: shortLifeConfig.startingOrganisms,
+        highestPoint: { x: 50, y: 50, height: 75 }
+      });
+      
+      // Use the dedicated random generator
+      const testWorldMap = new WorldMap(shortLifeConfig, testRandom);
+      testWorldMap.generateHeightMap();
       const testSim = new Simulation(
         shortLifeConfig,
-        new WorldMap(shortLifeConfig, random),
-        random
+        testWorldMap,
+        testRandom, // Pass the dedicated generator
+        testRegions
       );
       testSim.initialize();
 
+      // Mock reproduction to isolate death testing
+      const originalHandleReproduction = (testSim as any).handleReproduction;
+      (testSim as any).handleReproduction = () => [];
+
       // Run for 3 rounds (exceeding maxLifeSpan)
       for (let i = 0; i < 3; i++) {
-        testSim.runRound();
+        const result = testSim.runRound();
       }
 
-      // All original organisms should be dead
+      // Restore original method (good practice)
+      (testSim as any).handleReproduction = originalHandleReproduction;
+
+      // Assert that all organisms are gone after 3 rounds due to lifespan
       expect(testSim.getOrganismCount()).toBe(0);
     });
 
@@ -129,10 +185,22 @@ describe('Simulation', () => {
         randomSeed: testSeed
       });
       const testRandom = new SeededRandom(testSeed);
+      const testRegions = [new Region({
+        startX: 0,
+        endX: testConfig.worldSize,
+        startY: 0,
+        endY: testConfig.worldSize
+      })];
+      testRegions[0].updateStatistics({
+        averageHeight: 50,
+        carryingCapacity: testConfig.startingOrganisms,
+        highestPoint: { x: 50, y: 50, height: 75 }
+      });
       const testSim = new Simulation(
         testConfig,
         new WorldMap(testConfig, testRandom),
-        testRandom
+        testRandom,
+        testRegions
       );
       testSim.initialize();
 
@@ -142,7 +210,8 @@ describe('Simulation', () => {
       // Run rounds and track deaths
       const deaths: number[] = [];
       for (let i = 0; i < 3; i++) {
-        deaths.push(testSim.runRound());
+        const result = testSim.runRound();
+        deaths.push(result.deaths);
       }
       
       // Verify deaths add up to initial count
