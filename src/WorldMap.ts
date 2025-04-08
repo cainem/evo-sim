@@ -9,15 +9,28 @@ export class WorldMap {
 
   constructor(
     private readonly config: Config,
-    private readonly random: SeededRandom
+    private readonly random: SeededRandom,
+    initialHeightMap?: number[][] // Optional pre-generated map
   ) {
-    this.heightMap = Array(config.worldSize)
-      .fill(null)
-      .map(() => Array(config.worldSize).fill(0));
+    // Initialize Gaussian parameters regardless, might be needed elsewhere?
     this.gaussianParameters = Array(this.gaussianCount)
       .fill(null)
       .map(() => this.generateGaussianParameters());
-    this.generateHeightMap();
+      
+    if (initialHeightMap) {
+      // Use provided map if available
+      if (initialHeightMap.length !== config.worldSize || 
+          initialHeightMap[0]?.length !== config.worldSize) {
+         throw new Error('Provided initialHeightMap dimensions must match config.worldSize');
+      }
+      this.heightMap = initialHeightMap;
+    } else {
+      // Otherwise, initialize and generate the map
+      this.heightMap = Array(config.worldSize)
+        .fill(null)
+        .map(() => Array(config.worldSize).fill(0));
+      this.generateHeightMap(); // Generate map only if not provided
+    }
   }
 
   /**

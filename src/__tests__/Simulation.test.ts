@@ -12,28 +12,37 @@ describe('Simulation', () => {
   const testSeed = 12345;
 
   beforeEach(() => {
+    // Use smaller world size for faster test setup
+    const testWorldSize = 20; 
     config = Config.createCustomConfig({
-      worldSize: 100,
+      worldSize: testWorldSize,
       startingOrganisms: 10,
       maxLifeSpan: 50,
       randomSeed: testSeed
     });
     random = new SeededRandom(testSeed);
-    worldMap = new WorldMap(config, random);
-    worldMap.generateHeightMap(); // Ensure height map is initialized
-    // Create test regions
+    
+    // Create a simple flat height map for tests
+    const testHeightMap = Array(testWorldSize)
+      .fill(0)
+      .map(() => Array(testWorldSize).fill(50)); // Flat map at height 50
+      
+    // Pass the pre-generated map to WorldMap, skipping generation
+    worldMap = new WorldMap(config, random, testHeightMap); 
+    
+    // Create test regions (adjust if needed based on worldSize)
     const regions = [new Region({
       startX: 0,
-      endX: config.worldSize,
+      endX: config.worldSize, // Use config.worldSize here
       startY: 0,
-      endY: config.worldSize
+      endY: config.worldSize  // Use config.worldSize here
     })];
 
     // Set region statistics
     regions[0].updateStatistics({
       averageHeight: 50,
       carryingCapacity: 25, // Fixed carrying capacity for testing
-      highestPoint: { x: 50, y: 50, height: 75 }
+      highestPoint: { x: 10, y: 10, height: 75 }
     });
 
     simulation = new Simulation(config, worldMap, random, regions);
@@ -128,17 +137,19 @@ describe('Simulation', () => {
 
     it('should remove organisms that exceed maxLifeSpan', () => {
       // Create a test config with very short lifespan
+      const testWorldSize = 10; // Keep this small too
       const shortLifeConfig = Config.createCustomConfig({
         maxLifeSpan: 2,
         startingOrganisms: 5,
-        randomSeed: testSeed
+        randomSeed: testSeed,
+        worldSize: testWorldSize
       });
       // Create a dedicated random generator for this test to ensure determinism
       const testRandom = new SeededRandom(testSeed);
       
       const testRegions = [new Region({
         startX: 0,
-        endX: shortLifeConfig.worldSize,
+        endX: shortLifeConfig.worldSize, 
         startY: 0,
         endY: shortLifeConfig.worldSize
       })];
@@ -147,12 +158,17 @@ describe('Simulation', () => {
       testRegions[0].updateStatistics({
         averageHeight: 50,
         carryingCapacity: shortLifeConfig.startingOrganisms,
-        highestPoint: { x: 50, y: 50, height: 75 }
+        highestPoint: { x: 5, y: 5, height: 75 } // Adjusted for smaller size
       });
       
-      // Use the dedicated random generator
-      const testWorldMap = new WorldMap(shortLifeConfig, testRandom);
-      testWorldMap.generateHeightMap();
+      // Create simple map for this specific test
+      const testHeightMap = Array(testWorldSize)
+        .fill(0)
+        .map(() => Array(testWorldSize).fill(50));
+        
+      // Use the dedicated random generator and pre-generated map
+      const testWorldMap = new WorldMap(shortLifeConfig, testRandom, testHeightMap);
+      
       const testSim = new Simulation(
         shortLifeConfig,
         testWorldMap,
@@ -179,10 +195,12 @@ describe('Simulation', () => {
 
     it('should return correct number of deaths each round', () => {
       // Create a simulation with organisms that will die after 2 rounds
+      const testWorldSize = 10;
       const testConfig = Config.createCustomConfig({
         maxLifeSpan: 2,
         startingOrganisms: 4,
-        randomSeed: testSeed
+        randomSeed: testSeed,
+        worldSize: testWorldSize
       });
       const testRandom = new SeededRandom(testSeed);
       const testRegions = [new Region({
@@ -194,11 +212,17 @@ describe('Simulation', () => {
       testRegions[0].updateStatistics({
         averageHeight: 50,
         carryingCapacity: testConfig.startingOrganisms,
-        highestPoint: { x: 50, y: 50, height: 75 }
+        highestPoint: { x: 5, y: 5, height: 75 }
       });
+      
+      // Create simple map for this specific test
+      const testHeightMap = Array(testWorldSize)
+          .fill(0)
+          .map(() => Array(testWorldSize).fill(50));
+          
       const testSim = new Simulation(
         testConfig,
-        new WorldMap(testConfig, testRandom),
+        new WorldMap(testConfig, testRandom, testHeightMap), // Pass test map
         testRandom,
         testRegions
       );
