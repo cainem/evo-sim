@@ -21,4 +21,5 @@
 - There should be as little mocking used as possible. There is no I/O so the only mocking required is for the PRNG
 - The test descriptions should clearly spell out the desired behavior and results.
 - It is important to check the test descriptions against the overall objectives of the program.
+- Every effort should be taken to make sure unit tests run in a timely manner whilst still providing the coverage
 
