@@ -11,8 +11,12 @@ export class WorldMap {
     private readonly config: Config,
     private readonly random: SeededRandom
   ) {
-    this.heightMap = Array(config.worldSize).fill(null)
+    this.heightMap = Array(config.worldSize)
+      .fill(null)
       .map(() => Array(config.worldSize).fill(0));
+    this.gaussianParameters = Array(this.gaussianCount)
+      .fill(null)
+      .map(() => this.generateGaussianParameters());
     this.generateHeightMap();
   }
 
@@ -53,10 +57,6 @@ export class WorldMap {
    * Generates the height map using a sum of Gaussian functions
    */
   public generateHeightMap(): void {
-    // Generate Gaussian parameters
-    this.gaussianParameters = Array(this.gaussianCount)
-      .fill(null)
-      .map(() => this.generateGaussianParameters());
 
     // Calculate height for each point
     for (let x = 0; x < this.config.worldSize; x++) {
@@ -81,9 +81,12 @@ export class WorldMap {
    * Gets the height at coordinates (x, y), handling wrap-around
    */
   public getHeight(x: number, y: number): number {
-    // Handle wrap-around using modulo
-    const wrappedX = ((x % this.config.worldSize) + this.config.worldSize) % this.config.worldSize;
-    const wrappedY = ((y % this.config.worldSize) + this.config.worldSize) % this.config.worldSize;
+    // Ensure coordinates are integers before wrapping
+    const intX = Math.floor(x);
+    const intY = Math.floor(y);
+    // Wrap coordinates using modulo
+    const wrappedX = ((intX % this.config.worldSize) + this.config.worldSize) % this.config.worldSize;
+    const wrappedY = ((intY % this.config.worldSize) + this.config.worldSize) % this.config.worldSize;
     return this.heightMap[wrappedX][wrappedY];
   }
 
