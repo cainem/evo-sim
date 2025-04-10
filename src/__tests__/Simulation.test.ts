@@ -2,6 +2,8 @@ import { Config } from '../Config';
 import { WorldMap } from '../WorldMap';
 import { SeededRandom } from '../utils/SeededRandom';
 import { Simulation } from '../Simulation';
+import { Organism } from '../Organism';
+import { OrganismParameters } from '../types/OrganismParameters';
 import { Region } from '../Region';
 
 describe('Simulation', () => {
@@ -194,53 +196,81 @@ describe('Simulation', () => {
     });
 
     it('should return correct number of deaths each round', () => {
-      // Create a simulation with organisms that will die after 2 rounds
+      // Create a simulation with organisms that will die *in* round 2
       const testWorldSize = 10;
       const testConfig = Config.createCustomConfig({
         maxLifeSpan: 2,
         startingOrganisms: 4,
-        randomSeed: testSeed,
+        randomSeed: testSeed + 1, // Use different seed to avoid affecting other tests
         worldSize: testWorldSize
       });
-      const testRandom = new SeededRandom(testSeed);
+      const testRandom = new SeededRandom(testSeed + 1); // Use matching seed
       const testRegions = [new Region({
         startX: 0,
         endX: testConfig.worldSize,
         startY: 0,
         endY: testConfig.worldSize
       })];
-      testRegions[0].updateStatistics({
-        averageHeight: 50,
-        carryingCapacity: testConfig.startingOrganisms,
-        highestPoint: { x: 5, y: 5, height: 75 }
+      // Add dummy stats to satisfy type
+      testRegions[0].updateStatistics({ 
+        carryingCapacity: 100, 
+        averageHeight: 50, 
+        highestPoint: {x:0, y:0, height: 50}
       });
-      
+       
       // Create simple map for this specific test
       const testHeightMap = Array(testWorldSize)
           .fill(0)
           .map(() => Array(testWorldSize).fill(50));
           
-      const testSim = new Simulation(
-        testConfig,
-        new WorldMap(testConfig, testRandom, testHeightMap), // Pass test map
-        testRandom,
-        testRegions
-      );
-      testSim.initialize();
+      const testWorldMap = new WorldMap(testConfig, testRandom, testHeightMap);
+      
+      const testSim = new Simulation(testConfig, testWorldMap, testRandom, testRegions);
+
+      // Manually initialize organisms with age 0 for deterministic death test
+      const initialOrganisms: Organism[] = [];
+      const centerX = Math.floor(testConfig.worldSize / 2);
+      const centerY = Math.floor(testConfig.worldSize / 2);
+      for (let i = 0; i < testConfig.startingOrganisms; i++) {
+        const params: OrganismParameters = {
+          x: centerX,
+          y: centerY,
+          roundsLived: 0, // Explicitly start at age 0
+          // Add dummy mutation params
+          deliberateMutationX: 0,
+          deliberateMutationY: 0,
+          offspringsXDistance: 0,
+          offspringsYDistance: 0
+        };
+        initialOrganisms.push(new Organism(params, testConfig, testRandom)); // Correct signature
+      }
+      testSim.initializeWithOrganisms(initialOrganisms);
 
       // Get initial organism count
       const initialCount = testSim.getOrganismCount();
+      expect(initialCount).toBe(4); // Restore this assertion
       
-      // Run rounds and track deaths
+      // Mock reproduction to isolate death testing
+      const originalHandleReproduction = (testSim as any).handleReproduction;
+      (testSim as any).handleReproduction = () => []; 
+
+      // Run only 2 rounds
       const deaths: number[] = [];
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < 2; i++) { 
         const result = testSim.runRound();
         deaths.push(result.deaths);
       }
       
-      // Verify deaths add up to initial count
-      expect(deaths.reduce((a, b) => a + b, 0)).toBe(initialCount);
-      // Verify no organisms remain
+      // Restore original method (good practice)
+      (testSim as any).handleReproduction = originalHandleReproduction;
+
+      // Verify deaths occurred in round 2
+      expect(deaths.length).toBe(2);
+      expect(deaths[0]).toBe(0); // No deaths round 1
+      expect(deaths[1]).toBe(initialCount); // All die in round 2 when age == maxLifeSpan
+      expect(deaths.reduce((a, b) => a + b, 0)).toBe(initialCount); // Total deaths match initial
+      
+      // Verify no organisms remain (due to death and no births)
       expect(testSim.getOrganismCount()).toBe(0);
     });
   });

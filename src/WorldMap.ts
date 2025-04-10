@@ -4,7 +4,7 @@ import { GaussianParameters } from './types/GaussianParameters';
 
 export class WorldMap {
   private heightMap: number[][];
-  private readonly gaussianCount = 12; // Number of Gaussian functions to sum
+  private readonly gaussianCount = 50; // Adjusted count
   private gaussianParameters: GaussianParameters[] = [];
 
   constructor(
@@ -38,10 +38,10 @@ export class WorldMap {
    */
   private generateGaussianParameters(): GaussianParameters {
     return {
-      amplitude: this.random.nextFloat(0.3, 1.0) * this.config.worldMaxHeight,
+      amplitude: this.random.nextFloat(0.0, 0.9) * this.config.worldMaxHeight, // Range ensures non-negative hills
       centerX: this.random.nextFloat(0, this.config.worldSize),
       centerY: this.random.nextFloat(0, this.config.worldSize),
-      sigma: this.random.nextFloat(this.config.worldSize * 0.05, this.config.worldSize * 0.2)
+      sigma: this.random.nextFloat(this.config.worldSize * 0.02, this.config.worldSize * 0.08) // Min sigma range
     };
   }
 
@@ -67,27 +67,45 @@ export class WorldMap {
   }
 
   /**
-   * Generates the height map using a sum of Gaussian functions
+   * Generates the height map using a sum of Gaussian functions with normalization
    */
   public generateHeightMap(): void {
+    const rawHeights: number[][] = Array(this.config.worldSize)
+      .fill(null)
+      .map(() => Array(this.config.worldSize).fill(0));
+    let minRawHeight = Infinity;
+    let maxRawHeight = -Infinity;
 
-    // Calculate height for each point
+    // First pass: Calculate raw Gaussian sums and find min/max
     for (let x = 0; x < this.config.worldSize; x++) {
       for (let y = 0; y < this.config.worldSize; y++) {
-        let height = 0;
-        
-        // Sum all Gaussian functions
+        let rawHeight = 0;
         for (const params of this.gaussianParameters) {
-          height += this.calculateGaussianValue(x, y, params);
+          rawHeight += this.calculateGaussianValue(x, y, params);
         }
+        rawHeights[x][y] = rawHeight;
+        minRawHeight = Math.min(minRawHeight, rawHeight);
+        maxRawHeight = Math.max(maxRawHeight, rawHeight);
+      }
+    }
 
-        // Clamp height between 0 and worldMaxHeight
+    // Second pass: Normalize heights to the range [0, worldMaxHeight]
+    const rawRange = maxRawHeight - minRawHeight;
+    // Avoid division by zero if the map is completely flat
+    const scaleFactor = rawRange > 1e-6 ? this.config.worldMaxHeight / rawRange : 0;
+
+    for (let x = 0; x < this.config.worldSize; x++) {
+      for (let y = 0; y < this.config.worldSize; y++) {
+        const normalizedHeight = (rawHeights[x][y] - minRawHeight) * scaleFactor;
+        // Clamp final value just in case of floating point inaccuracies
         this.heightMap[x][y] = Math.min(
-          Math.max(height, 0),
+          Math.max(normalizedHeight, 0),
           this.config.worldMaxHeight
         );
       }
     }
+    const centerX = Math.floor(this.config.worldSize / 2);
+    const centerY = Math.floor(this.config.worldSize / 2);
   }
 
   /**

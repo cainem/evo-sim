@@ -121,6 +121,7 @@ describe('WorldMap', () => {
       expect(params.length).toBeGreaterThan(0);
       
       for (const param of params) {
+        // Amplitude should be positive according to original spec/test assumption
         expect(param.amplitude).toBeGreaterThan(0);
         expect(param.amplitude).toBeLessThanOrEqual(worldMaxHeight);
         expect(param.sigma).toBeGreaterThan(0);
