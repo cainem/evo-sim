@@ -27,6 +27,11 @@ export class Visualizer {
   private organismInstances: THREE.InstancedMesh | null = null;
   private flagsGroup: THREE.Group | null = null;
   private worldHighestFlag: THREE.Group | null = null;
+  
+  // UI Overlay elements
+  private uiOverlayContainer: HTMLDivElement | null = null;
+  private roundCounterElement: HTMLDivElement | null = null;
+  private organismCounterElement: HTMLDivElement | null = null;
 
   // Contour line properties
   private readonly contourLineLevels = 10;
@@ -82,6 +87,9 @@ export class Visualizer {
     this.labelRenderer.domElement.style.pointerEvents = 'none'; // Allow click-through to canvas
     this.labelRenderer.domElement.style.zIndex = '1'; // Ensure it's above the canvas
     document.body.appendChild(this.labelRenderer.domElement);
+
+    // 3.2 UI Overlay for simulation stats
+    this.createUIOverlay();
 
     // 4. World Plane (will be updated when setWorldMap is called)
     const segments = 200; // Increase segments for more detail
@@ -451,6 +459,55 @@ export class Visualizer {
         console.log("Stopping render loop");
         cancelAnimationFrame(this.frameId);
         this.frameId = null;
+    }
+  }
+  
+  /**
+   * Creates UI overlay elements for displaying simulation statistics
+   */
+  private createUIOverlay(): void {
+    // Create container for UI elements
+    this.uiOverlayContainer = document.createElement('div');
+    this.uiOverlayContainer.style.position = 'absolute';
+    this.uiOverlayContainer.style.top = '10px';
+    this.uiOverlayContainer.style.left = '10px';
+    this.uiOverlayContainer.style.padding = '10px';
+    this.uiOverlayContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
+    this.uiOverlayContainer.style.borderRadius = '5px';
+    this.uiOverlayContainer.style.color = 'white';
+    this.uiOverlayContainer.style.fontFamily = 'Arial, sans-serif';
+    this.uiOverlayContainer.style.fontSize = '14px';
+    this.uiOverlayContainer.style.zIndex = '1000';
+    this.uiOverlayContainer.style.userSelect = 'none';
+    this.uiOverlayContainer.style.pointerEvents = 'none'; // Allow click-through
+    
+    // Create round counter element
+    this.roundCounterElement = document.createElement('div');
+    this.roundCounterElement.style.marginBottom = '5px';
+    this.roundCounterElement.textContent = 'Round: 0';
+    this.uiOverlayContainer.appendChild(this.roundCounterElement);
+    
+    // Create organism counter element
+    this.organismCounterElement = document.createElement('div');
+    this.organismCounterElement.textContent = 'Organisms: 0';
+    this.uiOverlayContainer.appendChild(this.organismCounterElement);
+    
+    // Add to document
+    document.body.appendChild(this.uiOverlayContainer);
+  }
+  
+  /**
+   * Updates the UI overlay with current simulation statistics
+   * @param roundNumber Current round number
+   * @param organismCount Current number of organisms
+   */
+  public updateUIOverlay(roundNumber: number, organismCount: number): void {
+    if (this.roundCounterElement) {
+      this.roundCounterElement.textContent = `Round: ${roundNumber}`;
+    }
+    
+    if (this.organismCounterElement) {
+      this.organismCounterElement.textContent = `Organisms: ${organismCount}`;
     }
   }
 
@@ -927,6 +984,14 @@ export class Visualizer {
     // Remove the label renderer's DOM element
     if (this.labelRenderer && this.labelRenderer.domElement) {
       this.labelRenderer.domElement.remove();
+    }
+    
+    // Clean up UI overlay
+    if (this.uiOverlayContainer && this.uiOverlayContainer.parentNode) {
+      this.uiOverlayContainer.parentNode.removeChild(this.uiOverlayContainer);
+      this.uiOverlayContainer = null;
+      this.roundCounterElement = null;
+      this.organismCounterElement = null;
     }
     
     // Finally dispose the renderers
