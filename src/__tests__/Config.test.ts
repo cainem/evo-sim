@@ -9,13 +9,13 @@ describe('Config', () => {
   it('should create default config with singleton pattern', () => {
     const config = Config.getInstance();
     expect(config).toBeDefined();
-    expect(config.worldSize).toBe(1000);
-    expect(config.worldMaxHeight).toBe(100);
-    expect(config.startingOrganisms).toBe(100);
-    expect(config.maxLifeSpan).toBe(1000);
-    expect(config.deliberateMutationProbability).toBe(0.01);
-    expect(config.regionCount).toBe(10);
-    expect(config.contourLineInterval).toBe(10);
+    expect(config.worldSize).toBe(1200);
+    expect(config.worldMaxHeight).toBe(1000);
+    expect(config.startingOrganisms).toBe(1000);
+    expect(config.maxLifeSpan).toBe(10);
+    expect(config.deliberateMutationProbability).toBe(0.2);
+    expect(config.regionCount).toBe(100);
+    expect(config.contourLineInterval).toBe(100);
   });
 
   it('should create custom config with specified parameters', () => {
@@ -29,8 +29,8 @@ describe('Config', () => {
     expect(customConfig.worldMaxHeight).toBe(200);
     expect(customConfig.startingOrganisms).toBe(50);
     // Other parameters should remain default
-    expect(customConfig.maxLifeSpan).toBe(1000);
-    expect(customConfig.deliberateMutationProbability).toBe(0.01);
+    expect(customConfig.maxLifeSpan).toBe(10);
+    expect(customConfig.deliberateMutationProbability).toBe(0.2);
   });
 
   it('should maintain singleton instance', () => {
