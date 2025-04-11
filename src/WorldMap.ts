@@ -20,7 +20,7 @@ export class WorldMap {
     if (initialHeightMap) {
       // Use provided map if available
       if (initialHeightMap.length !== config.worldSize || 
-          initialHeightMap[0]?.length !== config.worldSize) {
+          !initialHeightMap.every(row => row?.length === config.worldSize)) {
          throw new Error('Provided initialHeightMap dimensions must match config.worldSize');
       }
       this.heightMap = initialHeightMap;

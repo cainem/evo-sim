@@ -155,17 +155,6 @@ export class Organism {
   }
 
   /**
-   * Moves the organism in a random direction
-   */
-  public move(random: SeededRandom, moveDistance: number): void {
-    const angle = random.nextFloat(0, 1) * 2 * Math.PI; // Use nextFloat(0, 1) for random angle
-    const dx = Math.cos(angle) * moveDistance;
-    const dy = Math.sin(angle) * moveDistance;
-    this.x = Math.floor(this.x + dx);
-    this.y = Math.floor(this.y + dy);
-  }
-
-  /**
    * Calculates a new mutation value based on current value and probability
    */
   private calculateNewMutation(

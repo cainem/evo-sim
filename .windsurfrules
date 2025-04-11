@@ -13,7 +13,7 @@
 - When fixing an issue or bug, do not introduce a new pattern or technology without first exhausting all options for the existing implementation. And if you finally do this, make sure to remove the old implementation afterwards so we don't have duplicate logic.
 - Keep the codebase very clean and organized
 - Avoid writing scripts in files if possible, especially if the script is likely only to be run once
-- Avoid having files over 100-200 lines of code. Refactor at that point.
+- Avoid having files over 80-150 lines of code. Refactor at that point.
 - Mocking data is only needed for tests
 - Never overwrite my .env file without first asking and confirming
 - Each function written should be fully unit tested
@@ -22,4 +22,6 @@
 - The test descriptions should clearly spell out the desired behavior and results.
 - It is important to check the test descriptions against the overall objectives of the program.
 - Every effort should be taken to make sure unit tests run in a timely manner whilst still providing the coverage
+- All functions should have unit tests.
+- All units tests must be passing before committing to git.
 
