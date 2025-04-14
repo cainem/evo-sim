@@ -31,8 +31,9 @@ export class Simulation {
       const params: OrganismParameters = {
         x: centerX,
         y: centerY,
-        deliberateMutationX: this.random.nextFloat(-1, 1),
-        deliberateMutationY: this.random.nextFloat(-1, 1),
+        // According to the PDD, deliberateMutation values should only be -1, 0, or 1
+        deliberateMutationX: this.getRandomMutationValue(),
+        deliberateMutationY: this.getRandomMutationValue(),
         offspringsXDistance: this.random.nextFloat(-10, 10),
         offspringsYDistance: this.random.nextFloat(-10, 10)
       };
@@ -140,12 +141,34 @@ export class Simulation {
 
         if (eligibleParents.length > 0) {
           // Sort by height at their position, using random for ties
+          console.log(`\n=== REGION ${regionIndex} REPRODUCTION (Capacity: ${carryingCapacity}, Current: ${livingOrganismCount}) ===`);
+          console.log(`Eligible parents: ${eligibleParents.length}`);
+          
+          // Add height information to parents for logging
+          const parentsWithHeight = eligibleParents.map(p => {
+            const pos = p.getPosition();
+            return {
+              organism: p,
+              position: pos,
+              height: this.worldMap.getHeight(pos.x, pos.y)
+            };
+          });
+          
+          // Log parents before sorting
+          parentsWithHeight.forEach((p, i) => {
+            console.log(`Parent ${i}: pos(${p.position.x},${p.position.y}), height: ${p.height}`);
+          });
+          
+          // Sort by height at their position, using random for ties
           eligibleParents.sort((a, b) => {
             const heightA = this.worldMap.getHeight(a.getPosition().x, a.getPosition().y);
             const heightB = this.worldMap.getHeight(b.getPosition().x, b.getPosition().y);
             if (heightA !== heightB) return heightB - heightA;
             return this.random.nextFloat(0, 1) - 0.5; // Random tiebreaker
           });
+          
+          // Log parents after sorting
+          console.log('=== AFTER SORTING BY HEIGHT ===');
 
           // Select top parents based on target reproductions and eligible parents count
           const numParents = Math.min(
@@ -154,8 +177,13 @@ export class Simulation {
           );
 
           // Create offspring
+          console.log(`Selected ${numParents} parents for reproduction`);
           for (let i = 0; i < numParents; i++) {
             const parent = eligibleParents[i];
+            const parentPos = parent.getPosition();
+            const parentHeight = this.worldMap.getHeight(parentPos.x, parentPos.y);
+            console.log(`Parent ${i} at (${parentPos.x},${parentPos.y}), height: ${parentHeight}`);
+            
             const offspring = parent.reproduce(
               this.config,
               this.random,
@@ -163,6 +191,7 @@ export class Simulation {
             );
             newOffspring.push(offspring);
           }
+          console.log('=== END REGION REPRODUCTION ===\n');
         }
       }
     }
@@ -195,5 +224,14 @@ export class Simulation {
     }
 
     return regionMap;
+  }
+  
+  /**
+   * Helper method to get a random mutation value (-1, 0, or 1)
+   * This ensures compliance with the PDD which specifies these discrete values
+   */
+  private getRandomMutationValue(): -1 | 0 | 1 {
+    const value = this.random.nextInt(0, 2); // 0, 1, or 2
+    return (value - 1) as -1 | 0 | 1; // Convert to -1, 0, or 1
   }
 }

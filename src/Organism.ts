@@ -131,6 +131,15 @@ export class Organism {
     random: SeededRandom,
     worldMap: WorldMap
   ): Organism {
+    // Log parent data
+    console.log('=== REPRODUCTION ===');
+    console.log('Parent position:', this.x, this.y, 'Height:', worldMap.getHeight(this.x, this.y));
+    console.log('Parent mutation values:', {
+      deliberateMutationX: this.deliberateMutationX,
+      deliberateMutationY: this.deliberateMutationY,
+      offspringsXDistance: this.offspringsXDistance,
+      offspringsYDistance: this.offspringsYDistance
+    });
     // Calculate new mutation values with probability of change
     const newDeliberateMutationX = this.calculateNewMutation(
       this.deliberateMutationX,
@@ -166,6 +175,16 @@ export class Organism {
       this.offspringsYDistance,
       newDeliberateMutationY
     );
+
+    // Log offspring data
+    console.log('Offspring position:', newX, newY, 'Height:', worldMap.getHeight(newX, newY));
+    console.log('Offspring parameters:', {
+      deliberateMutationX: newDeliberateMutationX,
+      deliberateMutationY: newDeliberateMutationY,
+      offspringsXDistance: newOffspringsXDistance, 
+      offspringsYDistance: newOffspringsYDistance
+    });
+    console.log('=== END REPRODUCTION ===');
 
     // Create and return the new offspring
     return new Organism({
