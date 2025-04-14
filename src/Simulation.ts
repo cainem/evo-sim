@@ -49,21 +49,22 @@ export class Simulation {
     deaths: number;
     births: number;
   } {
-    // Store initial count to calculate deaths
-    const initialCount = this.organisms.length;
-
-    // Age all organisms
+    // Phase 1: Mark organisms for death but don't remove them yet
+    // Age all organisms (this will mark them for death if they reach max lifespan)
     this.organisms.forEach(organism => organism.age());
+    
+    // Count how many organisms are marked for death
+    const markedForDeath = this.organisms.filter(organism => organism.isDead()).length;
 
-    // Remove dead organisms
-    const countBeforeFiltering = this.organisms.length; 
+    // Phase 2: Allow reproduction (including organisms marked for death)
+    const newOffspring = this.handleReproduction();
+    this.organisms.push(...newOffspring);
+
+    // Phase 3: Now remove dead organisms after reproduction has happened
+    const countBeforeFiltering = this.organisms.length;
     this.organisms = this.organisms.filter(organism => !organism.isDead());
     const countAfterFiltering = this.organisms.length;
     const deathsThisRound = countBeforeFiltering - countAfterFiltering;
-
-    // Handle reproduction
-    const newOffspring = this.handleReproduction();
-    this.organisms.push(...newOffspring);
 
     // Increment round number
     this.roundNumber++;
@@ -126,10 +127,13 @@ export class Simulation {
       const currentOrganismCount = organisms.length;
       const carryingCapacity = stats.carryingCapacity;
       
-      // Only process regions where current count is less than carrying capacity
-      if (currentOrganismCount < carryingCapacity && currentOrganismCount > 0) {
-        // Calculate target reproductions (as per PDD)
-        const targetReproductions = carryingCapacity - currentOrganismCount;
+      // Count living organisms (not marked for death) for population comparison
+      const livingOrganismCount = organisms.filter(org => !org.isDead()).length;
+      
+      // Only process regions where living count is less than carrying capacity
+      if (livingOrganismCount < carryingCapacity && currentOrganismCount > 0) {
+        // Calculate target reproductions based on living organisms (as per updated PDD)
+        const targetReproductions = carryingCapacity - livingOrganismCount;
         
         // Filter eligible parents (RL >= 1)
         const eligibleParents = organisms.filter(org => org.getRoundsLived() >= 1);
@@ -168,6 +172,7 @@ export class Simulation {
 
   /**
    * Groups organisms by their region index
+   * Organisms marked for death are excluded from the population count
    */
   private groupOrganismsByRegion(): Map<number, Organism[]> {
     const regionMap = new Map<number, Organism[]>();
@@ -177,7 +182,8 @@ export class Simulation {
       regionMap.set(i, []);
     }
 
-    // Group organisms by region
+    // Group organisms by region - but exclude ones marked for death from population count
+    // Note: They are still included in the arrays, just filtered for counting purposes
     for (const organism of this.organisms) {
       const pos = organism.getPosition();
       for (let i = 0; i < this.regions.length; i++) {

@@ -34,17 +34,18 @@ Lifespan: Organisms live for a maximum of Config.MaxLifeSpan rounds (Initial: 10
 Each round proceeds as follows:
 
 Aging: Increment RoundsLived for all organisms.
-Death: Remove organisms where RoundsLived >= Config.MaxLifeSpan.
+Death (a): Identify and mark for death organisms where RoundsLived >= Config.MaxLifeSpan.
 Reproduction Phase (Region-Based):
 For each Region:
-Identify current organisms n within the region.
+Identify current organisms n within the region that have not been marked for death
 Determine the region's CarryingCapacity m (calculated at startup).
 If n < m and n > 0:
 Calculate target reproductions: q = m - n.
-Filter organisms: Select only those with RoundsLived >= 1. Let this count be n_eligible.
+Filter organisms: Select only those with RoundsLived >= 1. Let this count be n_eligible. Do include organisms that have been marked for death.
 Sort eligible organisms by the height f(x, y) at their position (descending). Handle ties pseudo-randomly.
 Select the top min(q, n_eligible) organisms for reproduction.
 Each selected organism creates one offspring.
+Death (b): Remove organisms that have been marked for death.
 Update Counters: Update overall round and population counters.
 5. Reproduction Mechanics
 

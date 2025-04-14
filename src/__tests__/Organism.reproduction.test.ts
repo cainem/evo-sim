@@ -110,7 +110,7 @@ describe('Organism Reproduction', () => {
   });
 
   describe('Position Calculation', () => {
-    it('should calculate correct offspring position', () => {
+    it('should not apply offset when deliberateMutation is 0', () => {
       const parent = new Organism({
         x: 50,
         y: 50,
@@ -123,17 +123,36 @@ describe('Organism Reproduction', () => {
 
       const offspring = parent.reproduce(config, random, worldMap);
       const pos = offspring.getPosition();
-      expect(pos.x).toBe(60); // 50 + 10
-      expect(pos.y).toBe(40); // 50 - 10
+      // With deliberateMutation = 0, offspringsDistance should not be applied
+      expect(pos.x).toBe(50); // No offset when deliberateMutationX is 0
+      expect(pos.y).toBe(50); // No offset when deliberateMutationY is 0
     });
 
-    it('should handle world wrap-around', () => {
+    it('should apply offset when deliberateMutation is non-zero', () => {
+      const parent = new Organism({
+        x: 50,
+        y: 50,
+        roundsLived: 0,
+        deliberateMutationX: 1,
+        deliberateMutationY: -1,
+        offspringsXDistance: 10,
+        offspringsYDistance: -10
+      }, config);
+
+      const offspring = parent.reproduce(config, random, worldMap);
+      const pos = offspring.getPosition();
+      // With deliberateMutation != 0, offspringsDistance should be applied
+      expect(pos.x).toBe(60); // 50 + 10 when deliberateMutationX is 1
+      expect(pos.y).toBe(40); // 50 - 10 when deliberateMutationY is -1
+    });
+    
+    it('should handle world wrap-around with non-zero mutation', () => {
       const parent = new Organism({
         x: 90,
         y: 10,
         roundsLived: 0,
-        deliberateMutationX: 0,
-        deliberateMutationY: 0,
+        deliberateMutationX: 1,
+        deliberateMutationY: -1,
         offspringsXDistance: 20,
         offspringsYDistance: -20
       }, config);

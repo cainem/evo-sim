@@ -7,6 +7,7 @@ export class Organism {
   private x: number;
   private y: number;
   private roundsLived: number;
+  private markedForDeath: boolean = false;
   private readonly deliberateMutationX: number;
   private readonly deliberateMutationY: number;
   private readonly offspringsXDistance: number;
@@ -46,13 +47,33 @@ export class Organism {
    */
   public age(): void {
     this.roundsLived++;
+    // Mark for death if max lifespan has been reached
+    if (this.roundsLived >= this.config.maxLifeSpan) {
+      this.markedForDeath = true;
+    }
   }
 
   /**
    * Checks if the organism has reached its maximum lifespan
+   * This now returns whether the organism is marked for death
    */
   public isDead(): boolean {
+    return this.markedForDeath;
+  }
+
+  /**
+   * Checks if the organism has reached its maximum lifespan
+   * This is used during the marking phase
+   */
+  public shouldDie(): boolean {
     return this.roundsLived >= this.config.maxLifeSpan;
+  }
+
+  /**
+   * Marks the organism for death
+   */
+  public markForDeath(): void {
+    this.markedForDeath = true;
   }
 
   /**
@@ -122,13 +143,17 @@ export class Organism {
       random
     );
 
-    // Calculate offspring position using parent's distance parameters
+    // Calculate offset based on deliberateMutation values as per PDD
+    const offsetX = this.deliberateMutationX !== 0 ? this.offspringsXDistance : 0;
+    const offsetY = this.deliberateMutationY !== 0 ? this.offspringsYDistance : 0;
+    
+    // Calculate offspring position using parent's position and offset
     const newX = this.calculateWrappedCoordinate(
-      this.x + this.offspringsXDistance,
+      this.x + offsetX,
       config.worldSize
     );
     const newY = this.calculateWrappedCoordinate(
-      this.y + this.offspringsYDistance,
+      this.y + offsetY,
       config.worldSize
     );
 
