@@ -73,25 +73,81 @@ describe('Simulation Reproduction', () => {
     });
 
     it('should respect carrying capacity', () => {
-      // Add more organisms to exceed carrying capacity
-      const extraOrganisms: Organism[] = [];
-      for (let i = 0; i < 4; i++) {
-        for (let j = 0; j < 30; j++) {
-          extraOrganisms.push(new Organism({
-            x: 25 + i * 50,
-            y: 25 + j,
-            roundsLived: 2,
-            deliberateMutationX: 0,
-            deliberateMutationY: 0,
-            offspringsXDistance: 1,
-            offspringsYDistance: 1
-          }, config));
-        }
+      // Let's create a very controlled test scenario
+      // We'll use a single region setup to eliminate cross-region complexity
+      const singleRegionConfig = Config.createCustomConfig({
+        worldSize: 50,
+        startingOrganisms: 0, // We'll add organisms manually
+        maxLifeSpan: 10,
+        regionCount: 1, // Just 1 region for simplicity
+        randomSeed: testSeed
+      });
+      
+      // Create a simple flat test heightmap
+      const testHeightMap = Array(50)
+        .fill(0)
+        .map(() => Array(50).fill(50)); // Flat map at height 50
+      
+      const testWorldMap = new WorldMap(singleRegionConfig, random, testHeightMap);
+      
+      // Create a single test region covering the entire world
+      const testRegion = new Region({
+        startX: 0,
+        endX: 50,
+        startY: 0,
+        endY: 50
+      });
+      
+      // Set region statistics with explicit carrying capacity
+      const CARRYING_CAPACITY = 30;
+      testRegion.updateStatistics({
+        averageHeight: 50,
+        carryingCapacity: CARRYING_CAPACITY,
+        highestPoint: { x: 25, y: 25, height: 75 }
+      });
+      
+      // Create test simulation with single region
+      const testSimulation = new Simulation(
+        singleRegionConfig,
+        testWorldMap,
+        random,
+        [testRegion]
+      );
+      
+      // Initialize with 20 organisms (CARRYING_CAPACITY = 30, so 10 more can be born)
+      const TEST_ORGANISM_COUNT = 20;
+      const initialOrganisms: Organism[] = [];
+      
+      for (let i = 0; i < TEST_ORGANISM_COUNT; i++) {
+        initialOrganisms.push(new Organism({
+          x: 25, // All in center
+          y: 25, // All in center
+          roundsLived: 2, // All eligible for reproduction
+          deliberateMutationX: 0,
+          deliberateMutationY: 0,
+          offspringsXDistance: 1,
+          offspringsYDistance: 1
+        }, singleRegionConfig));
       }
-      simulation.initializeWithOrganisms(extraOrganisms);
-
-      const result = simulation.runRound();
-      expect(result.births).toBe(60); // Limited by carrying capacity across 4 regions (15 per region)
+      
+      testSimulation.initializeWithOrganisms(initialOrganisms);
+      
+      // Run a single round
+      const result = testSimulation.runRound();
+      
+      // Expected births:
+      // - Carrying capacity = 30
+      // - Current organisms = 20
+      // - Target reproductions = 30 - 20 = 10
+      // - All organisms are eligible, so we expect exactly 10 births
+      const expectedBirths = CARRYING_CAPACITY - TEST_ORGANISM_COUNT;
+      
+      expect(result.births).toBe(expectedBirths);
+      
+      // Run another round - now we should be at carrying capacity (30 organisms),
+      // so no more births should occur
+      const result2 = testSimulation.runRound();
+      expect(result2.births).toBe(0); // No births when at carrying capacity
     });
 
     it('should only select eligible organisms', () => {

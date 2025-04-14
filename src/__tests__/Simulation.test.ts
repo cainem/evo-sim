@@ -107,12 +107,16 @@ describe('Simulation', () => {
       expect(simulation.getRoundNumber()).toBe(0);
       const result1 = simulation.runRound();
       expect(result1.deaths).toBe(0);
-      expect(result1.births).toBe(10); // 10 initial organisms -> 10 eligible parents -> 10 births
+      // With carryingCapacity of 25 and 10 initial organisms, we can have up to 15 births
+      // But we only have 10 eligible parents (the initial organisms), so we get 10 births
+      expect(result1.births).toBe(10);
       expect(simulation.getRoundNumber()).toBe(1);
       
       const result2 = simulation.runRound();
       expect(result2.deaths).toBe(0); // Assuming maxLifeSpan is high enough
-      expect(result2.births).toBe(20); // 20 organisms (10 aged + 10 new) -> 20 eligible -> 20 births (assuming capacity)
+      // Now we have 20 organisms (10 aged + 10 new), but capacity is 25, so only 5 more can be born
+      // But we have 20 eligible parents, so we'll only select 5 of those to give birth
+      expect(result2.births).toBe(5);
       expect(simulation.getRoundNumber()).toBe(2);
     });
 

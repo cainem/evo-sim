@@ -123,34 +123,42 @@ export class Simulation {
     for (const [regionIndex, organisms] of regionMap.entries()) {
       const region = this.regions[regionIndex];
       const stats = region.getStatistics();
+      const currentOrganismCount = organisms.length;
+      const carryingCapacity = stats.carryingCapacity;
+      
+      // Only process regions where current count is less than carrying capacity
+      if (currentOrganismCount < carryingCapacity && currentOrganismCount > 0) {
+        // Calculate target reproductions (as per PDD)
+        const targetReproductions = carryingCapacity - currentOrganismCount;
+        
+        // Filter eligible parents (RL >= 1)
+        const eligibleParents = organisms.filter(org => org.getRoundsLived() >= 1);
 
-      // Filter eligible parents (RL >= 1)
-      const eligibleParents = organisms.filter(org => org.getRoundsLived() >= 1);
+        if (eligibleParents.length > 0) {
+          // Sort by height at their position, using random for ties
+          eligibleParents.sort((a, b) => {
+            const heightA = this.worldMap.getHeight(a.getPosition().x, a.getPosition().y);
+            const heightB = this.worldMap.getHeight(b.getPosition().x, b.getPosition().y);
+            if (heightA !== heightB) return heightB - heightA;
+            return this.random.nextFloat(0, 1) - 0.5; // Random tiebreaker
+          });
 
-      if (eligibleParents.length > 0) {
-        // Sort by height at their position, using random for ties
-        eligibleParents.sort((a, b) => {
-          const heightA = this.worldMap.getHeight(a.getPosition().x, a.getPosition().y);
-          const heightB = this.worldMap.getHeight(b.getPosition().x, b.getPosition().y);
-          if (heightA !== heightB) return heightB - heightA;
-          return this.random.nextFloat(0, 1) - 0.5; // Random tiebreaker
-        });
-
-        // Select top parents based on carrying capacity
-        const numParents = Math.min(
-          stats.carryingCapacity,
-          eligibleParents.length
-        );
-
-        // Create offspring
-        for (let i = 0; i < numParents; i++) {
-          const parent = eligibleParents[i];
-          const offspring = parent.reproduce(
-            this.config,
-            this.random,
-            this.worldMap
+          // Select top parents based on target reproductions and eligible parents count
+          const numParents = Math.min(
+            targetReproductions,
+            eligibleParents.length
           );
-          newOffspring.push(offspring);
+
+          // Create offspring
+          for (let i = 0; i < numParents; i++) {
+            const parent = eligibleParents[i];
+            const offspring = parent.reproduce(
+              this.config,
+              this.random,
+              this.worldMap
+            );
+            newOffspring.push(offspring);
+          }
         }
       }
     }
