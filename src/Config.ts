@@ -9,7 +9,8 @@ export class Config {
     public readonly maxLifeSpan: number = 10,
     public readonly deliberateMutationProbability: number = 0.2,
     public readonly regionCount: number = 100, // Must be a perfect square (10x10)
-    public readonly contourLineInterval: number = 100
+    public readonly contourLineInterval: number = 100,
+    public readonly isTestEnvironment: boolean = false
   ) {}
 
   public static getInstance(): Config {
@@ -28,7 +29,8 @@ export class Config {
       params.maxLifeSpan ?? 10,
       params.deliberateMutationProbability ?? 0.2,
       params.regionCount ?? 100, // Must be a perfect square (10x10)
-      params.contourLineInterval ?? 100
+      params.contourLineInterval ?? 100,
+      true // Mark as test environment for customized configs
     );
     return Config.instance;
   }

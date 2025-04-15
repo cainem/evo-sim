@@ -24,8 +24,9 @@ export class Organism {
     private readonly config: Config,
     random?: SeededRandom
   ) {
-    this.x = params.x;
-    this.y = params.y;
+    // Ensure positions are stored as integers
+    this.x = Math.floor(params.x);
+    this.y = Math.floor(params.y);
     this.deliberateMutationX = params.deliberateMutationX;
     this.deliberateMutationY = params.deliberateMutationY;
     this.offspringsXDistance = params.offspringsXDistance;
@@ -131,15 +132,25 @@ export class Organism {
     random: SeededRandom,
     worldMap: WorldMap
   ): Organism {
-    // Log parent data
-    console.log('=== REPRODUCTION ===');
-    console.log('Parent position:', this.x, this.y, 'Height:', worldMap.getHeight(this.x, this.y));
-    console.log('Parent mutation values:', {
-      deliberateMutationX: this.deliberateMutationX,
-      deliberateMutationY: this.deliberateMutationY,
-      offspringsXDistance: this.offspringsXDistance,
-      offspringsYDistance: this.offspringsYDistance
-    });
+    // Only log in non-test environment
+    const isTestEnvironment = config.isTestEnvironment;
+    
+    if (!isTestEnvironment) {
+      console.log('=== REPRODUCTION ===');
+      
+      // Add bounds checking before calling getHeight
+      const worldSize = config.worldSize;
+      const isValidPos = this.x >= 0 && this.x < worldSize && this.y >= 0 && this.y < worldSize;
+      const height = isValidPos ? worldMap.getHeight(this.x, this.y) : 'OUT_OF_BOUNDS';
+      
+      console.log('Parent position:', this.x, this.y, 'Height:', height);
+      console.log('Parent mutation values:', {
+        deliberateMutationX: this.deliberateMutationX,
+        deliberateMutationY: this.deliberateMutationY,
+        offspringsXDistance: this.offspringsXDistance,
+        offspringsYDistance: this.offspringsYDistance
+      });
+    }
     // Calculate new mutation values with probability of change
     const newDeliberateMutationX = this.calculateNewMutation(
       this.deliberateMutationX,
@@ -166,25 +177,33 @@ export class Organism {
       config.worldSize
     );
 
-    // Calculate new offspring distances based on parent's mutation values
-    const newOffspringsXDistance = this.calculateNewDistance(
-      this.offspringsXDistance,
-      newDeliberateMutationX
-    );
-    const newOffspringsYDistance = this.calculateNewDistance(
-      this.offspringsYDistance,
-      newDeliberateMutationY
-    );
+    // Calculate single-step distances for logging/verification
+    const singleStepXDistance = newX - this.x;
+    const singleStepYDistance = newY - this.y;
 
-    // Log offspring data
-    console.log('Offspring position:', newX, newY, 'Height:', worldMap.getHeight(newX, newY));
-    console.log('Offspring parameters:', {
-      deliberateMutationX: newDeliberateMutationX,
-      deliberateMutationY: newDeliberateMutationY,
-      offspringsXDistance: newOffspringsXDistance, 
-      offspringsYDistance: newOffspringsYDistance
-    });
-    console.log('=== END REPRODUCTION ===');
+    // Calculate cumulative offspring distance based on PDD
+    const cumulativeOffspringXDistance = this.offspringsXDistance + newDeliberateMutationX;
+    const cumulativeOffspringYDistance = this.offspringsYDistance + newDeliberateMutationY;
+
+    // Log offspring data - but only outside of test environment
+    if (!isTestEnvironment) {
+      // Add bounds check for the height lookup
+      const isValidPos = newX >= 0 && newX < config.worldSize && newY >= 0 && newY < config.worldSize;
+      const height = isValidPos ? worldMap.getHeight(newX, newY) : 'OUT_OF_BOUNDS';
+      
+      console.log('Offspring position:', newX, newY, 'Height:', height);
+      console.log('Offspring parameters:', {
+        deliberateMutationX: newDeliberateMutationX,
+        deliberateMutationY: newDeliberateMutationY,
+        offspringsXDistance: cumulativeOffspringXDistance, 
+        offspringsYDistance: cumulativeOffspringYDistance
+      });
+      console.log('Parent State: MutX=' + this.deliberateMutationX + ', MutY=' + this.deliberateMutationY + ', CumDistX=' + this.offspringsXDistance + ', CumDistY=' + this.offspringsYDistance);
+      console.log('Mutation Applied: finalMutX=' + newDeliberateMutationX + ', finalMutY=' + newDeliberateMutationY);
+      console.log('Distances: StepX=' + singleStepXDistance + ', StepY=' + singleStepYDistance + ', CumX=' + cumulativeOffspringXDistance + ', CumY=' + cumulativeOffspringYDistance);
+      console.log('Offspring Initial State: MutX=' + newDeliberateMutationX + ', MutY=' + newDeliberateMutationY + ', CumDistX=' + cumulativeOffspringXDistance + ', CumDistY=' + cumulativeOffspringYDistance);
+      console.log('=== END REPRODUCTION ===');
+    }
 
     // Create and return the new offspring
     return new Organism({
@@ -193,8 +212,8 @@ export class Organism {
       roundsLived: 0,
       deliberateMutationX: newDeliberateMutationX,
       deliberateMutationY: newDeliberateMutationY,
-      offspringsXDistance: newOffspringsXDistance,
-      offspringsYDistance: newOffspringsYDistance
+      offspringsXDistance: cumulativeOffspringXDistance,
+      offspringsYDistance: cumulativeOffspringYDistance
     }, config);
   }
 
@@ -226,9 +245,12 @@ export class Organism {
   }
 
   /**
-   * Calculates wrapped coordinate for world boundaries
+   * Calculates wrapped coordinate for world boundaries, ensuring integer result
    */
   private calculateWrappedCoordinate(coord: number, worldSize: number): number {
-    return ((coord % worldSize) + worldSize) % worldSize;
+    // Calculate wrapped coordinate
+    const wrappedCoord = ((coord % worldSize) + worldSize) % worldSize;
+    // Ensure the result is an integer
+    return Math.floor(wrappedCoord);
   }
 }
