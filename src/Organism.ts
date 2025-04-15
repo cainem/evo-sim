@@ -181,9 +181,17 @@ export class Organism {
     const singleStepXDistance = newX - this.x;
     const singleStepYDistance = newY - this.y;
 
-    // Calculate cumulative offspring distance based on PDD
-    const cumulativeOffspringXDistance = this.offspringsXDistance + newDeliberateMutationX;
-    const cumulativeOffspringYDistance = this.offspringsYDistance + newDeliberateMutationY;
+    // Calculate cumulative offspring distance based on PDD and clamp to [-5, 5]
+    const cumulativeOffspringXDistance = Organism.clampToRange(
+      this.offspringsXDistance + newDeliberateMutationX,
+      -5,
+      5
+    );
+    const cumulativeOffspringYDistance = Organism.clampToRange(
+      this.offspringsYDistance + newDeliberateMutationY,
+      -5,
+      5
+    );
 
     // Log offspring data - but only outside of test environment
     if (!isTestEnvironment) {
@@ -243,6 +251,14 @@ export class Organism {
   private calculateNewDistance(currentDistance: number, mutation: number): number {
     return currentDistance + mutation;
   }
+
+  /**
+   * Clamps a value to the specified min and max (inclusive)
+   */
+  private static clampToRange(value: number, min: number, max: number): number {
+    return Math.max(min, Math.min(max, value));
+  }
+
 
   /**
    * Calculates wrapped coordinate for world boundaries, ensuring integer result

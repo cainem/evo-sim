@@ -109,6 +109,96 @@ describe('Organism Reproduction', () => {
     });
   });
 
+  describe('Clamping of Offspring Distances', () => {
+    it('should clamp offspringsXDistance to -5 if parent+mutation < -5', () => {
+      const parent = new Organism({
+        x: 0,
+        y: 0,
+        roundsLived: 0,
+        deliberateMutationX: 1,
+        deliberateMutationY: 0,
+        offspringsXDistance: -6,
+        offspringsYDistance: 0
+      }, config);
+      // Force mutation to +1 (so -6 + 1 = -5, but let's test -6 + 0 = -6)
+      const noMutationRandom = new SeededRandom(testSeed);
+      jest.spyOn(noMutationRandom, 'nextBoolean').mockReturnValue(false);
+      const offspring = parent.reproduce(config, noMutationRandom, worldMap);
+      const params = offspring.getParameters();
+      expect(params.offspringsXDistance).toBe(-5);
+    });
+    it('should clamp offspringsXDistance to 5 if parent+mutation > 5', () => {
+      const parent = new Organism({
+        x: 0,
+        y: 0,
+        roundsLived: 0,
+        deliberateMutationX: 1,
+        deliberateMutationY: 0,
+        offspringsXDistance: 6,
+        offspringsYDistance: 0
+      }, config);
+      // Force mutation to +1 (so 6 + 1 = 7)
+      const mutationRandom = new SeededRandom(testSeed);
+      jest.spyOn(mutationRandom, 'nextBoolean')
+        .mockReturnValueOnce(false) // X: no mutation
+        .mockReturnValueOnce(false); // Y: no mutation
+      const offspring = parent.reproduce(config, mutationRandom, worldMap);
+      const params = offspring.getParameters();
+      expect(params.offspringsXDistance).toBe(5);
+    });
+    it('should clamp offspringsYDistance to -5 if parent+mutation < -5', () => {
+      const parent = new Organism({
+        x: 0,
+        y: 0,
+        roundsLived: 0,
+        deliberateMutationX: 0,
+        deliberateMutationY: 1,
+        offspringsXDistance: 0,
+        offspringsYDistance: -6
+      }, config);
+      const noMutationRandom = new SeededRandom(testSeed);
+      jest.spyOn(noMutationRandom, 'nextBoolean').mockReturnValue(false);
+      const offspring = parent.reproduce(config, noMutationRandom, worldMap);
+      const params = offspring.getParameters();
+      expect(params.offspringsYDistance).toBe(-5);
+    });
+    it('should clamp offspringsYDistance to 5 if parent+mutation > 5', () => {
+      const parent = new Organism({
+        x: 0,
+        y: 0,
+        roundsLived: 0,
+        deliberateMutationX: 0,
+        deliberateMutationY: 1,
+        offspringsXDistance: 0,
+        offspringsYDistance: 6
+      }, config);
+      const mutationRandom = new SeededRandom(testSeed);
+      jest.spyOn(mutationRandom, 'nextBoolean')
+        .mockReturnValueOnce(false) // X: no mutation
+        .mockReturnValueOnce(false); // Y: no mutation
+      const offspring = parent.reproduce(config, mutationRandom, worldMap);
+      const params = offspring.getParameters();
+      expect(params.offspringsYDistance).toBe(5);
+    });
+    it('should not clamp if within range', () => {
+      const parent = new Organism({
+        x: 0,
+        y: 0,
+        roundsLived: 0,
+        deliberateMutationX: 1,
+        deliberateMutationY: 1,
+        offspringsXDistance: 3,
+        offspringsYDistance: -4
+      }, config);
+      const noMutationRandom = new SeededRandom(testSeed);
+      jest.spyOn(noMutationRandom, 'nextBoolean').mockReturnValue(false);
+      const offspring = parent.reproduce(config, noMutationRandom, worldMap);
+      const params = offspring.getParameters();
+      expect(params.offspringsXDistance).toBe(4);
+      expect(params.offspringsYDistance).toBe(-3);
+    });
+  });
+
   describe('Position Calculation', () => {
     it('should not apply offset when deliberateMutation is 0', () => {
       const parent = new Organism({
