@@ -62,6 +62,7 @@ The child's state reflects these potentially mutated values.
 Offspring Distance Update:
 Child.OffspringsXDistance = Parent.OffspringsXDistance + Parent.DeliberateMutationX
 Child.OffspringsYDistance = Parent.OffspringsYDistance + Parent.DeliberateMutationY
+Child.OffspringsXDistance/Child.OffspringsYDistance cannot be less than -5 or greater than 5
 Offspring Placement:
 Start at parent's (x, y).
 Calculate offset:
