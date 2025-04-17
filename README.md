@@ -90,7 +90,6 @@ Lines: Draw contour lines at intervals defined by Config.ContourLineInterval (In
 Regions: Draw outlines for each region boundary. Display the region's CarryingCapacity as text within or near the region.
 Organisms: Represent each organism by a 3x3 pixel square centered at its (x, y) position. Color can be uniform (e.g., black or white) or potentially encode state (optional).
 Flags:
-Mark the highest sampled point within each region with a small blue flag/marker.
 Mark the highest sampled point in the entire world with a small red flag/marker.
 UI Overlays: Display the current Round Number and Total Population count, typically in a corner (e.g., top-left).
 8. Configuration (Config Class/Object)

@@ -447,23 +447,23 @@ describe('Visualizer', () => {
       expect((visualizer as any).organismInstances).toBeDefined();
     });
     
-    it('drawFlags should create visualization for flags', () => {
-      // This would test that drawFlags correctly creates and stores flag visualizations
-      visualizer.drawFlags([mockRegion as any], { x: 60, y: 60, height: 40 });
-      expect((visualizer as any).flagsGroup).toBeDefined();
+    it('drawFlags should create visualization for the world flag only', () => {
+      // This would test that drawFlags correctly creates and stores the world flag visualization
+      visualizer.drawFlags({ x: 60, y: 60, height: 40 });
+      expect((visualizer as any).worldHighestFlag).toBeDefined();
     });
     
     it('dispose should clean up all visualization resources', () => {
       // This would test that dispose correctly cleans up all visualization resources
       visualizer.drawRegions([mockRegion as any]);
       visualizer.drawOrganisms([mockOrganism as any]);
-      visualizer.drawFlags([mockRegion as any], { x: 60, y: 60, height: 40 });
+      visualizer.drawFlags({ x: 60, y: 60, height: 40 });
       
       visualizer.dispose();
       
       expect((visualizer as any).regionBoundaries).toBeNull();
       expect((visualizer as any).organismInstances).toBeNull();
-      expect((visualizer as any).flagsGroup).toBeNull();
+      expect((visualizer as any).worldHighestFlag).toBeNull();
     });
   });
   

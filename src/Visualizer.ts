@@ -229,11 +229,16 @@ export class Visualizer {
       const z = Math.max(0, Math.min(worldSize - 1, mapZ));
       const height = map.getHeight(x, z);
       positionAttribute.setZ(i, height);
-      // Restore original color calculation logic
+      // Blue-Green-Red color mapping
       const color = new THREE.Color();
-      // Example: simple grayscale based on height (replace with original logic if different)
       const normalizedHeight = height / maxHeight;
-      color.setRGB(normalizedHeight, normalizedHeight, normalizedHeight);
+      if (normalizedHeight < 0.5) {
+        // Blend from blue to green
+        color.setRGB(0, 2 * normalizedHeight, 1 - 2 * normalizedHeight);
+      } else {
+        // Blend from green to red
+        color.setRGB(2 * (normalizedHeight - 0.5), 1 - 2 * (normalizedHeight - 0.5), 0);
+      }
       colors[i * 3] = color.r;
       colors[i * 3 + 1] = color.g;
       colors[i * 3 + 2] = color.b;
@@ -671,26 +676,11 @@ console.log('[Visualizer] computeVertexNormals completed');
   }
   
   /**
-   * Draws flags at highest points in regions and the world
-   * @param regions Array of regions to visualize highest points for
+   * Draws a flag at the highest point in the world
    * @param worldHighestSampledPoint The highest point in the entire world
    */
-  public drawFlags(regions: Region[], worldHighestSampledPoint: { x: number, y: number, height: number }): void {
+  public drawFlags(worldHighestSampledPoint: { x: number, y: number, height: number }): void {
     console.log('Drawing flags for highest points');
-    
-    // Remove existing flags group if it exists
-    if (this.flagsGroup) {
-      this.scene.remove(this.flagsGroup);
-      this.flagsGroup.traverse((object: THREE.Object3D) => {
-        if (object instanceof THREE.Mesh) {
-          object.geometry.dispose();
-          if (object.material instanceof THREE.Material) {
-            object.material.dispose();
-          }
-        }
-      });
-      this.flagsGroup = null;
-    }
     
     // Remove existing world highest flag if it exists
     if (this.worldHighestFlag) {
@@ -711,80 +701,23 @@ console.log('[Visualizer] computeVertexNormals completed');
     const worldSize = this.config.worldSize;
     const halfSize = worldSize / 2;
     
-    // Create a new group for regional flags
-    this.flagsGroup = new THREE.Group();
-    
-    // Create flag geometry and materials
-    const flagPoleGeometry = new THREE.CylinderGeometry(0.2, 0.2, 15, 8); // Taller pole
-    const flagGeometry = new THREE.BoxGeometry(5, 3, 0.1); // Wider flag
-    const poleColor = 0x888888; // Gray
-    const poleMaterial = new THREE.MeshBasicMaterial({ color: poleColor });
-    const regionalFlagMaterial = new THREE.MeshBasicMaterial({ color: this.regionalFlagColor });
-    const worldFlagMaterial = new THREE.MeshBasicMaterial({ color: this.worldFlagColor });
-    
-    // Draw regional flags
-    regions.forEach(region => {
-      const stats = region.getStatistics();
-      const highestPoint = stats.highestPoint || { x: 0, y: 0, height: 0 };
-      
-      // Convert to world coordinates
-      const worldX = highestPoint.x - halfSize;
-      const worldZ = highestPoint.y - halfSize;
-      const worldY = highestPoint.height;
-      
-      // Create flag pole
-      const pole = new THREE.Mesh(flagPoleGeometry, poleMaterial);
-      if (pole.position) {
-        pole.position.set(worldX, worldY + 5, worldZ); // half height of pole up
-      }
-      
-      // Create flag
-      const flag = new THREE.Mesh(flagGeometry, regionalFlagMaterial);
-      if (flag.position) {
-        flag.position.set(worldX + 2, worldY + 8, worldZ); // at top of pole, offset to the right
-      }
-      
-      // Add to group
-      if (this.flagsGroup) {
-        this.flagsGroup.add(pole);
-        this.flagsGroup.add(flag);
-      }
-      
-      // Create label for regional highest point
-      const div = document.createElement('div');
-      div.className = 'flag-label';
-      div.textContent = `${highestPoint.height.toFixed(0)}`; // Just the height number
-      div.style.color = 'white';
-      div.style.backgroundColor = 'rgba(0,100,255,0.6)';
-      div.style.padding = '1px 3px';
-      div.style.borderRadius = '2px';
-      div.style.fontSize = '8px';
-      
-      const label = new CSS2DObject(div);
-      if (label.position) {
-        label.position.set(worldX, worldY + 11, worldZ); // Above the flag
-      }
-      
-      if (this.flagsGroup) {
-        this.flagsGroup.add(label);
-      }
-    });
-    
-    // Add the regional flags group to the scene
-    if (this.flagsGroup) {
-      this.scene.add(this.flagsGroup);
-    }
-    
     // Draw world highest point flag if provided
     if (worldHighestSampledPoint) {
+      // Create flag geometry and materials
+      const flagPoleGeometry = new THREE.CylinderGeometry(0.2, 0.2, 15, 8); // Taller pole
+      const flagGeometry = new THREE.BoxGeometry(5, 3, 0.1); // Wider flag
+      const poleColor = 0x888888; // Gray
+      const poleMaterial = new THREE.MeshBasicMaterial({ color: poleColor });
+      const worldFlagMaterial = new THREE.MeshBasicMaterial({ color: this.worldFlagColor });
+
       // Convert to world coordinates
       const worldX = worldHighestSampledPoint.x - halfSize;
       const worldZ = worldHighestSampledPoint.y - halfSize;
       const worldY = worldHighestSampledPoint.height;
-      
+
       // Create the flag group
       const worldFlagGroup = new THREE.Group();
-      
+
       // Create flag pole (taller)
       const pole = new THREE.Mesh(flagPoleGeometry, poleMaterial);
       if (pole.position) {
@@ -793,7 +726,7 @@ console.log('[Visualizer] computeVertexNormals completed');
       if (pole.scale) {
         pole.scale.setY(1.5); // Make pole taller
       }
-      
+
       // Create flag (larger)
       const flag = new THREE.Mesh(flagGeometry, worldFlagMaterial);
       if (flag.position) {
@@ -802,11 +735,11 @@ console.log('[Visualizer] computeVertexNormals completed');
       if (flag.scale) {
         flag.scale.set(1.5, 1.5, 1); // Make flag larger
       }
-      
+
       // Add to group
       worldFlagGroup.add(pole);
       worldFlagGroup.add(flag);
-      
+
       // Create label for world highest point
       const div = document.createElement('div');
       div.className = 'world-flag-label';
@@ -817,14 +750,14 @@ console.log('[Visualizer] computeVertexNormals completed');
       div.style.borderRadius = '2px';
       div.style.fontSize = '9px';
       div.style.fontWeight = 'normal';
-      
+
       const label = new CSS2DObject(div);
       if (label.position) {
         label.position.set(worldX, worldY + 16, worldZ); // Above the flag
       }
-      
+
       worldFlagGroup.add(label);
-      
+
       // Store and add to the scene
       this.worldHighestFlag = worldFlagGroup;
       this.scene.add(worldFlagGroup);

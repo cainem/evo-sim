@@ -89,7 +89,7 @@ if (canvas) {
             }, { x: 0, y: 0, height: 0 });
             
             console.log('World highest point:', worldHighestPoint);
-            visualizer.drawFlags(regions, worldHighestPoint);
+            visualizer.drawFlags(worldHighestPoint);
             
             console.log('All visualization methods called successfully');
         } catch (e) {
