@@ -5,10 +5,10 @@ export class Config {
     public readonly worldSize: number = 1200,
     public readonly worldMaxHeight: number = 1000,
     public readonly randomSeed: number = Date.now(),
-    public readonly startingOrganisms: number = 1000,
+    public readonly startingOrganisms: number = 5000,
     public readonly maxLifeSpan: number = 10,
     public readonly deliberateMutationProbability: number = 0.2,
-    public readonly regionCount: number = 100, // Must be a perfect square (10x10)
+    public readonly regionCount: number = 900, // Must be a perfect square (10x10)
     public readonly contourLineInterval: number = 100,
     public readonly isTestEnvironment: boolean = false
   ) {}

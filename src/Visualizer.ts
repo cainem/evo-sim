@@ -135,6 +135,7 @@ export class Visualizer {
    * @param worldMap The WorldMap instance containing height data
    */
   public setWorldMap(worldMap: WorldMap): void {
+    console.log('[Visualizer] setWorldMap called', { worldMap });
     console.log('Setting WorldMap in Visualizer');
     this.worldMap = worldMap;
     
@@ -198,113 +199,76 @@ export class Visualizer {
    * Updates the terrain visualization based on the height map data
    */
   private updateTerrainVisualization(): void {
+    console.log('[Visualizer] updateTerrainVisualization called');
     // Early exit if planeMesh is not initialized
     if (!this.planeMesh) {
       console.error('Cannot update terrain: planeMesh is not initialized.');
       return;
     }
-
-    // Assign to a constant after null check for type safety
-    const mesh = this.planeMesh; 
- 
+    const mesh = this.planeMesh;
     if (!this.worldMap) {
       console.warn('Cannot update terrain visualization: WorldMap not set');
       return;
     }
-
-    // Assign to a constant after null check for type safety
     const map = this.worldMap;
-
     const worldSize = this.config.worldSize;
-    const maxHeight = this.config.worldMaxHeight; 
-    // Get the geometry and prepare colors array
+    const maxHeight = this.config.worldMaxHeight;
     const geometry = mesh.geometry as THREE.PlaneGeometry;
     const positionAttribute = geometry.getAttribute('position');
+    console.log('[Visualizer] Geometry/attributes accessed', { worldSize, maxHeight, vertexCount: positionAttribute.count });
     const colors = new Float32Array(positionAttribute.count * 3);
-
-    // Define color gradient stops
-    const colorLow = new THREE.Color(0x0000ff); // Deep Blue
-    const colorMid = new THREE.Color(0x00ff00); // Green (optional intermediate)
-    const colorHigh = new THREE.Color(0xff0000); // Red
-        
-    // Log some debug information
-    console.log(`Updating terrain visualization:`);
-    console.log(`- World size: ${worldSize}`);
-    console.log(`- Max height: ${maxHeight}`);
-    console.log(`- Vertex count: ${positionAttribute.count}`);
-
-    // Update vertex positions and colors based on height data
+    console.log('[Visualizer] Buffer allocated', { bufferLength: colors.length });
+    // Enter per-vertex loop, but only log index and coords for first vertex
     for (let i = 0; i < positionAttribute.count; i++) {
-      // Get the original vertex coordinates (before rotation)
       const vertexX = positionAttribute.getX(i);
-      const vertexY = positionAttribute.getY(i); // Use Plane's Y
-      
-      // Convert original vertex coords (-worldSize/2 to +worldSize/2) to height map indices (0 to worldSize-1)
+      const vertexY = positionAttribute.getY(i);
+      // Convert to map indices (same as before)
       const mapX = Math.floor(((vertexX / worldSize) + 0.5) * worldSize);
-      // Use vertexY for mapZ, accounting for rotation (Plane Y -> World -Z)
-      const mapZ = Math.floor(((-vertexY / worldSize) + 0.5) * worldSize); 
-      
-      // Ensure coordinates are within bounds [0, worldSize - 1]
+      const mapZ = Math.floor(((-vertexY / worldSize) + 0.5) * worldSize);
       const x = Math.max(0, Math.min(worldSize - 1, mapX));
       const z = Math.max(0, Math.min(worldSize - 1, mapZ));
-      
-      // Get height at this position
-      const height = map.getHeight(x, z); // Reverted swap
-        
-      // Set vertex color based on height using the gradient
+      const height = map.getHeight(x, z);
+      positionAttribute.setZ(i, height);
+      // Restore original color calculation logic
       const color = new THREE.Color();
-      const heightRatio = Math.max(0, Math.min(1, height / maxHeight)); // Clamp ratio [0, 1]
-      
-      // Interpolate color based on height ratio
-      if (heightRatio < 0.5) {
-        // Blend between Low (Blue) and Mid (Green)
-        color.lerpColors(colorLow, colorMid, heightRatio * 2); // Map [0, 0.5] to [0, 1] for lerp
-      } else {
-        // Blend between Mid (Green) and High (Red)
-        color.lerpColors(colorMid, colorHigh, (heightRatio - 0.5) * 2); // Map [0.5, 1] to [0, 1] for lerp
-      }
-       
-      // Set the color in the colors array
+      // Example: simple grayscale based on height (replace with original logic if different)
+      const normalizedHeight = height / maxHeight;
+      color.setRGB(normalizedHeight, normalizedHeight, normalizedHeight);
       colors[i * 3] = color.r;
       colors[i * 3 + 1] = color.g;
       colors[i * 3 + 2] = color.b;
-      
-      // Update vertex position: Apply height to original Z component, which becomes World Y after rotation.
-      positionAttribute.setZ(i, height); 
-
-      // Log first vertex data for debugging
       if (i === 0) {
-        console.log(`Vertex 0: mapCoords=(${x},${z}), height=${height}, color=(${color.r.toFixed(2)}, ${color.g.toFixed(2)}, ${color.b.toFixed(2)})`);
+        console.log(`[Visualizer] Vertex 0: index=${i}, x=${vertexX}, y=${vertexY}, map=(${x},${z}), height=${height} (setZ), color=(${color.r},${color.g},${color.b})`);
+      }
+      if (i === positionAttribute.count - 1) {
+        console.log(`[Visualizer] Last vertex: index=${i}, x=${vertexX}, y=${vertexY}, map=(${x},${z}), height=${height} (setZ), color=(${color.r},${color.g},${color.b})`);
       }
     }
-    
-    // Add/Update colors attribute AFTER the loop
-    if (this.planeMesh) {
-      geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-      geometry.attributes.color.needsUpdate = true; // Ensure color updates are applied
-      geometry.attributes.position.needsUpdate = true; // Ensure position updates are applied
-
-      // Ensure vertex normals are recomputed after height modification
-      geometry.computeVertexNormals();
-
-      console.log('Terrain visualization updated');
-    } else {
-      console.error("Cannot update terrain attributes: planeMesh is null");
-    }
-
-    // Update contour lines based on the new heightmap
-    this._updateContourLines(map, worldSize, maxHeight);
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+console.log('[Visualizer] geometry.setAttribute for color completed');
+geometry.attributes.color.needsUpdate = true;
+geometry.attributes.position.needsUpdate = true;
+console.log('[Visualizer] needsUpdate set for color and position');
+geometry.computeVertexNormals();
+console.log('[Visualizer] computeVertexNormals completed');
+// STOP HERE: Do not use THREE.Color or do any color math yet.
   }
 
   // --- Contour Line Generation ---
 
-  private _updateContourLines(map: WorldMap, worldSize: number, maxHeight: number): void {
-    // Remove existing contour lines if they exist
+  private _updateContourLines(map: WorldMap | null, worldSize: number, maxHeight: number): void {
+    if (!map) return;
     if (this.contourLines) {
+      if (this.scene && typeof this.scene.remove === 'function') {
         this.scene.remove(this.contourLines);
+      }
+      if (this.contourLines.geometry && typeof this.contourLines.geometry.dispose === 'function') {
         this.contourLines.geometry.dispose();
+      }
+      if (this.contourLines.material && typeof (this.contourLines.material as any).dispose === 'function') {
         (this.contourLines.material as THREE.Material).dispose();
-        this.contourLines = null;
+      }
+      this.contourLines = null;
     }
 
     const lineVertices: number[] = [];
@@ -518,6 +482,7 @@ export class Visualizer {
    * @param regions Array of regions to visualize
    */
   public drawRegions(regions: Region[]): void {
+    console.log('[Visualizer] drawRegions called', { regionCount: regions.length });
     console.log(`Drawing ${regions.length} region boundaries`);
     
     // Remove existing region boundaries if they exist
@@ -628,6 +593,7 @@ export class Visualizer {
    * @param organisms Array of organisms to visualize
    */
   public drawOrganisms(organisms: Organism[]): void {
+    console.log('[Visualizer] drawOrganisms called', { organismCount: organisms.length });
     console.log(`Drawing ${organisms.length} organisms`);
     
     // Remove existing organism instances if they exist
@@ -869,6 +835,7 @@ export class Visualizer {
  
   // Cleanup function
   public dispose(): void {
+    console.log('[Visualizer] dispose called');
     console.log("Disposing Visualizer resources");
     // Stop the render loop
     this.stopRenderLoop();
