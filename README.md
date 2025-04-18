@@ -19,7 +19,7 @@ Randomness: All pseudo-random elements (initial organism age, mutations, height 
 3. Organisms
 
 Initial State:
-Config.StartingOrganisms (Initial: 1000) are created at the start.
+Config.StartingOrganisms (Initial: 5000) are created at the start.
 All start at the center coordinates: (floor(Config.WorldSize / 2) - 1, floor(Config.WorldSize / 2) - 1).
 Internal State:
 position: Current (x, y) coordinates on the world surface.
@@ -29,7 +29,7 @@ DeliberateMutationY: Integer: -1, 0, or 1. Initialized to 0.
 OffspringsXDistance: Integer. Initialized to 0.
 OffspringsYDistance: Integer. Initialized to 0.
 Lifespan: Organisms live for a maximum of Config.MaxLifeSpan rounds (Initial: 10).
-The PRNG is initialized once from a single seed value (RandomSeed, Initial: 42) allowing the results to be fully deterministic.
+The PRNG is initialized once from a single seed value (RandomSeed, Initial: 9969) allowing the results to be fully deterministic.
 4. Simulation Loop (Round-Based)
 
 Each round proceeds as follows:
@@ -75,8 +75,8 @@ Child.Y = (Parent.Y + offsetY + Config.WorldSize) % Config.WorldSize
 The child organism is added to the simulation at this new position.
 6. Regions
 
-Definition: The world is divided into a grid of Config.RegionCount (Initial: 100) square regions. Config.RegionCount must be a perfect square. Config.WorldSize must be an exact multiple of sqrt(Config.RegionCount).
-Initial Region Size: Config.WorldSize / sqrt(Config.RegionCount) = 1200 / 10 = 120x120.
+Definition: The world is divided into a grid of Config.RegionCount (Initial: 900) square regions. Config.RegionCount must be a perfect square. Config.WorldSize must be an exact multiple of sqrt(Config.RegionCount).
+Initial Region Size: Config.WorldSize / sqrt(Config.RegionCount) = 1200 / 30 = 40x40.
 Startup Calculation:
 Average Height: For each region, calculate average height by sampling f(x, y) at 100 points arranged in a 10x10 grid evenly spaced within the region boundaries. Store this average.
 Highest Sampled Point: Identify the coordinates and height of the highest point among the 100 sampled within each region. Store this.
@@ -93,18 +93,18 @@ Organisms: Represent each organism by a 3x3 pixel square centered at its (x, y) 
 Flags:
 Mark the highest sampled point in the entire world with a small red flag/marker.
 UI Overlays: Display the current Round Number and Total Population count, typically in a corner (e.g., top-left).
-Allowing the setting of the random seed so the user can control the results of the simulation.
+Allowing the setting of all configuration parameters (WorldSize, WorldMaxHeight, StartingOrganisms, MaxLifeSpan, DeliberateMutationProbability, RegionCount, ContourLineInterval) and the random seed (Initial: 9969) via a configuration panel at startup.
 8. Configuration (Config Class/Object)
 
 Consolidate all simulation parameters:
 
 WorldSize (Initial: 1200)
 WorldMaxHeight (Initial: 1000)
-RandomSeed (Initial: e.g., 42) - Crucial for reproducibility
-StartingOrganisms (Initial: 1000)
+RandomSeed (Initial: 9969) - Crucial for reproducibility
+StartingOrganisms (Initial: 5000)
 MaxLifeSpan (Initial: 10)
 DeliberateMutationProbability (Initial: 0.2)
-RegionCount (Initial: 100)
+RegionCount (Initial: 900)
 ContourLineInterval (Initial: 100)
 (Internal/Derived): RegionSize, Gaussian parameters for height map, etc.
 9. Methodology & Testing

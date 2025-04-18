@@ -15,20 +15,68 @@ const roundDelay = 500; // milliseconds between rounds
 
 // Get the canvas element
 const canvas = document.getElementById('simulationCanvas') as HTMLCanvasElement;
-const seedInput = document.getElementById('seedInput') as HTMLInputElement;
+// Get UI elements
+const configPanelContainer = document.getElementById('configPanelContainer');
+const randomSeedInput = document.getElementById('randomSeedInput') as HTMLInputElement;
+const worldSizeInput = document.getElementById('worldSizeInput') as HTMLInputElement;
+const worldMaxHeightInput = document.getElementById('worldMaxHeightInput') as HTMLInputElement;
+const startingOrganismsInput = document.getElementById('startingOrganismsInput') as HTMLInputElement;
+const maxLifeSpanInput = document.getElementById('maxLifeSpanInput') as HTMLInputElement;
+const mutationProbabilityInput = document.getElementById('mutationProbabilityInput') as HTMLInputElement;
+const regionCountInput = document.getElementById('regionCountInput') as HTMLInputElement;
+const contourIntervalInput = document.getElementById('contourIntervalInput') as HTMLInputElement;
 const startSimBtn = document.getElementById('startSimBtn') as HTMLButtonElement;
-const seedInputContainer = document.getElementById('seedInputContainer');
+const errorMessageDiv = document.getElementById('errorMessage') as HTMLDivElement;
 
-function startSimulationWithSeed(seed: number) {
+let currentVisualizer: Visualizer | null = null; // Keep track of the current visualizer
+let currentControlsContainer: HTMLElement | null = null; // Keep track of controls UI
+
+// Function to read and validate config from UI
+function readConfigFromUI(): Config | null {
+    const values = {
+        randomSeed: parseInt(randomSeedInput.value, 10),
+        worldSize: parseInt(worldSizeInput.value, 10),
+        worldMaxHeight: parseInt(worldMaxHeightInput.value, 10),
+        startingOrganisms: parseInt(startingOrganismsInput.value, 10),
+        maxLifeSpan: parseInt(maxLifeSpanInput.value, 10),
+        deliberateMutationProbability: parseFloat(mutationProbabilityInput.value),
+        regionCount: parseInt(regionCountInput.value, 10),
+        contourLineInterval: parseInt(contourIntervalInput.value, 10),
+    };
+
+    const errors: string[] = [];
+
+    // Validate values
+    if (isNaN(values.randomSeed) || values.randomSeed < 0 || values.randomSeed > 4294967295) errors.push('Invalid Random Seed (must be 0-4294967295).');
+    if (isNaN(values.worldSize) || values.worldSize < 100) errors.push('Invalid World Size (min 100).');
+    if (isNaN(values.worldMaxHeight) || values.worldMaxHeight < 100) errors.push('Invalid Max Height (min 100).');
+    if (isNaN(values.startingOrganisms) || values.startingOrganisms < 10) errors.push('Invalid Starting Organisms (min 10).');
+    if (isNaN(values.maxLifeSpan) || values.maxLifeSpan < 1) errors.push('Invalid Max Lifespan (min 1).');
+    if (isNaN(values.deliberateMutationProbability) || values.deliberateMutationProbability < 0 || values.deliberateMutationProbability > 1) errors.push('Invalid Mutation Probability (must be 0-1).');
+    if (isNaN(values.regionCount) || values.regionCount < 4 || Math.sqrt(values.regionCount) % 1 !== 0) errors.push('Invalid Region Count (must be a perfect square >= 4).');
+    if (values.worldSize % Math.sqrt(values.regionCount) !== 0) errors.push('World Size must be divisible by Sqrt(Region Count).');
+    if (isNaN(values.contourLineInterval) || values.contourLineInterval < 10) errors.push('Invalid Contour Interval (min 10).');
+
+    if (errors.length > 0) {
+        errorMessageDiv.innerHTML = errors.join('<br>');
+        errorMessageDiv.style.display = 'block';
+        return null;
+    } else {
+        errorMessageDiv.style.display = 'none';
+        // Create config with user inputs - mark as non-test
+        return Config.createCustomConfig({ ...values, isTestEnvironment: false });
+    }
+}
+
+function startSimulationWithConfig(config: Config) {
     if (!canvas) {
         console.error('Canvas element #simulationCanvas not found!');
         return;
     }
-    // Hide the seed input UI
-    if (seedInputContainer) seedInputContainer.style.display = 'none';
 
-    // Create config with user seed
-    const config = Config.createCustomConfig({ randomSeed: seed });
+    // Hide the config panel UI
+    if (configPanelContainer) configPanelContainer.style.display = 'none';
+
     // Create a seeded random number generator
     const random = new SeededRandom(config.randomSeed);
     // Create the world map
@@ -58,15 +106,21 @@ function startSimulationWithSeed(seed: number) {
         });
     }
     try {
-        const visualizer = new Visualizer(canvas);
-        visualizer.setWorldMap(worldMap);
+        // Dispose previous visualizer if exists
+        if (currentVisualizer) {
+            currentVisualizer.dispose();
+            currentVisualizer = null;
+        }
+
+        currentVisualizer = new Visualizer(canvas);
+        currentVisualizer.setWorldMap(worldMap);
         if (DEBUG) {
-            console.log('CSS2DRenderer initialized:', visualizer);
+            console.log('CSS2DRenderer initialized:', currentVisualizer);
         }
         let worldHighestPoint = { x: 0, y: 0, height: 0 };
         try {
-            visualizer.drawRegions(regions);
-            visualizer.drawOrganisms(simulation.getOrganisms());
+            currentVisualizer.drawRegions(regions);
+            currentVisualizer.drawOrganisms(simulation.getOrganisms());
             const allRegionStats = regions.map(r => r.getStatistics());
             worldHighestPoint = allRegionStats.reduce((highest, stat) => {
                 if (stat.highestPoint && stat.highestPoint.height > highest.height) {
@@ -74,15 +128,16 @@ function startSimulationWithSeed(seed: number) {
                 }
                 return highest;
             }, { x: 0, y: 0, height: 0 });
-            visualizer.drawFlags(worldHighestPoint);
+            currentVisualizer.drawFlags(worldHighestPoint);
         } catch (e) {
             console.error('Error during visualization:', e);
         }
-        visualizer.startRenderLoop();
-        visualizer.updateUIOverlay(simulation.getRoundNumber(), simulation.getOrganismCount());
-        setupSimulationControls(simulation, visualizer, regions, worldHighestPoint);
+        currentVisualizer.startRenderLoop();
+        currentVisualizer.updateUIOverlay(simulation.getRoundNumber(), simulation.getOrganismCount());
+        setupSimulationControls(simulation, currentVisualizer);
+
         window.addEventListener('beforeunload', () => {
-            visualizer.dispose();
+            currentVisualizer?.dispose();
         });
         console.log("Visualizer initialized with terrain, regions, organisms, and flags.");
     } catch (error) {
@@ -92,86 +147,88 @@ function startSimulationWithSeed(seed: number) {
 
 if (startSimBtn) {
     startSimBtn.onclick = () => {
-        let seed = parseInt(seedInput?.value || '', 10);
-        if (isNaN(seed) || seed < 0 || seed > 4294967295) {
-            // Use default seed if not provided or invalid
-            seed = 42;
+        const config = readConfigFromUI();
+        if (config) {
+            startSimulationWithConfig(config);
         }
-        startSimulationWithSeed(seed);
     };
 }
-// Optionally, allow pressing Enter in the input to start
-if (seedInput) {
-    seedInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            startSimBtn?.click();
-        }
-    });
-}
+// Add event listeners for Enter key on all inputs
+const configInputs = [randomSeedInput, worldSizeInput, worldMaxHeightInput, startingOrganismsInput, maxLifeSpanInput, mutationProbabilityInput, regionCountInput, contourIntervalInput];
+configInputs.forEach(input => {
+    if (input) {
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                startSimBtn?.click();
+            }
+        });
+    }
+});
 
 /**
  * Sets up the simulation controls and main simulation loop
  * @param simulation The simulation instance
  * @param visualizer The visualizer instance
- * @param regions The regions of the world
- * @param worldHighestPoint The highest point in the world
  */
 function setupSimulationControls(
     simulation: Simulation,
-    visualizer: Visualizer,
-    regions: Region[],
-    worldHighestPoint: { x: number, y: number, height: number }
+    visualizer: Visualizer
 ): void {
-    // Create control buttons container
-    const controlsContainer = document.createElement('div');
-    controlsContainer.style.position = 'absolute';
-    controlsContainer.style.bottom = '10px';
-    controlsContainer.style.left = '10px';
-    controlsContainer.style.padding = '10px';
-    controlsContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
-    controlsContainer.style.borderRadius = '5px';
-    controlsContainer.style.zIndex = '1000';
-    
+    // Remove previous controls if they exist
+    if (currentControlsContainer) {
+        currentControlsContainer.remove();
+        currentControlsContainer = null;
+    }
+
+    currentControlsContainer = document.createElement('div');
+    currentControlsContainer.style.position = 'absolute';
+    currentControlsContainer.style.bottom = '10px';
+    currentControlsContainer.style.left = '10px';
+    currentControlsContainer.style.padding = '10px';
+    currentControlsContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
+    currentControlsContainer.style.borderRadius = '5px';
+    currentControlsContainer.style.zIndex = '1000';
+
     // Create start/stop button
     const toggleButton = document.createElement('button');
     toggleButton.textContent = 'Start Simulation';
     toggleButton.style.marginRight = '10px';
     toggleButton.style.padding = '5px 10px';
     toggleButton.style.cursor = 'pointer';
-    
+
     // Create step button
     const stepButton = document.createElement('button');
     stepButton.textContent = 'Run 1 Round';
     stepButton.style.padding = '5px 10px';
     stepButton.style.cursor = 'pointer';
-    
+
     // Create reset button
     const resetButton = document.createElement('button');
     resetButton.textContent = 'Reset';
     resetButton.style.marginLeft = '10px';
     resetButton.style.padding = '5px 10px';
     resetButton.style.cursor = 'pointer';
-    
+
     // Add buttons to container
-    controlsContainer.appendChild(toggleButton);
-    controlsContainer.appendChild(stepButton);
-    controlsContainer.appendChild(resetButton);
-    
+    currentControlsContainer.appendChild(toggleButton);
+    currentControlsContainer.appendChild(stepButton);
+    currentControlsContainer.appendChild(resetButton);
+
     // Add container to body
-    document.body.appendChild(controlsContainer);
-    
+    document.body.appendChild(currentControlsContainer);
+
     // Keep track of the simulation interval
     let simulationInterval: number | null = null;
-    
+
     // Toggle button click event
     toggleButton.addEventListener('click', () => {
         isSimulationRunning = !isSimulationRunning;
-        
+
         if (isSimulationRunning) {
             toggleButton.textContent = 'Stop Simulation';
             stepButton.disabled = true;
             resetButton.disabled = true;
-            
+
             // Start the simulation loop
             simulationInterval = window.setInterval(() => {
                 runSimulationRound(simulation, visualizer);
@@ -180,7 +237,7 @@ function setupSimulationControls(
             toggleButton.textContent = 'Start Simulation';
             stepButton.disabled = false;
             resetButton.disabled = false;
-            
+
             // Stop the simulation loop
             if (simulationInterval !== null) {
                 clearInterval(simulationInterval);
@@ -188,40 +245,44 @@ function setupSimulationControls(
             }
         }
     });
-    
+
     // Step button click event
     stepButton.addEventListener('click', () => {
         runSimulationRound(simulation, visualizer);
     });
-    
+
     // Reset button click event
     resetButton.addEventListener('click', () => {
-        // Stop simulation if running
-        if (isSimulationRunning) {
-            isSimulationRunning = false;
-            toggleButton.textContent = 'Start Simulation';
-            
-            if (simulationInterval !== null) {
-                clearInterval(simulationInterval);
-                simulationInterval = null;
-            }
+        // Dispose current visualizer and remove controls
+        if (currentVisualizer) {
+            currentVisualizer.dispose();
+            currentVisualizer = null;
         }
-        
-        // Reset simulation
-        simulation.reset();
-        simulation.initialize();
-        
-        // Update visualization
-        visualizer.drawOrganisms(simulation.getOrganisms());
-        visualizer.updateUIOverlay(simulation.getRoundNumber(), simulation.getOrganismCount());
+        if (currentControlsContainer) {
+            currentControlsContainer.remove();
+            currentControlsContainer = null;
+        }
+
+        // Show the config panel again
+        if (configPanelContainer) {
+            configPanelContainer.style.display = 'block';
+        }
+
+        // Clear any previous errors
+        errorMessageDiv.style.display = 'none';
+        errorMessageDiv.innerHTML = '';
+
+        console.log("Simulation reset, showing config panel.");
     });
-    
+
     // Add cleanup logic
     window.addEventListener('beforeunload', () => {
         if (simulationInterval !== null) {
             clearInterval(simulationInterval);
         }
-        document.body.removeChild(controlsContainer);
+        if (currentControlsContainer) {
+            currentControlsContainer.remove();
+        }
     });
 }
 
@@ -233,7 +294,7 @@ function setupSimulationControls(
 function runSimulationRound(simulation: Simulation, visualizer: Visualizer): void {
     // Run a simulation round
     const roundStats = simulation.runRound();
-    
+
     if (DEBUG) {
         console.log(`Round ${simulation.getRoundNumber()} stats:`, {
             organisms: simulation.getOrganismCount(),
@@ -241,10 +302,10 @@ function runSimulationRound(simulation: Simulation, visualizer: Visualizer): voi
             births: roundStats.births
         });
     }
-    
+
     // Update visualization with new organism positions
     visualizer.drawOrganisms(simulation.getOrganisms());
-    
+
     // Update UI overlay with current simulation stats
     visualizer.updateUIOverlay(simulation.getRoundNumber(), simulation.getOrganismCount());
 }

@@ -7,13 +7,57 @@
     <style>
         body { margin: 0; overflow: hidden; } /* Remove default margin and hide scrollbars */
         canvas { display: block; width: 100vw; height: 100vh; } /* Make canvas fill the viewport */
+        #configPanelContainer label {
+            display: block;
+            margin-top: 8px;
+            font-weight: bold;
+        }
+        #configPanelContainer input[type=number] {
+            width: 150px;
+            padding: 4px;
+            margin-top: 4px;
+        }
+        #configPanelContainer button {
+            margin-top: 15px;
+            padding: 8px 15px;
+        }
+        #errorMessage {
+            color: red;
+            margin-top: 10px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
-    <div style="position:absolute;top:10px;left:10px;z-index:10;background:rgba(255,255,255,0.9);padding:12px 16px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);" id="seedInputContainer">
-        <label for="seedInput" style="margin-right:8px;font-weight:bold;">Random Seed:</label>
-        <input type="number" id="seedInput" min="0" max="4294967295" placeholder="e.g. 42" style="width:120px;">
-        <button id="startSimBtn" style="margin-left:8px;">Start Simulation</button>
+    <div style="position:absolute;top:10px;left:10px;z-index:10;background:rgba(255,255,255,0.9);padding:15px 20px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto;" id="configPanelContainer">
+        <h3>Simulation Configuration</h3>
+
+        <label for="randomSeedInput">Random Seed:</label>
+        <input type="number" id="randomSeedInput" value="9969" min="0" max="4294967295">
+
+        <label for="worldSizeInput">World Size:</label>
+        <input type="number" id="worldSizeInput" value="1200" min="100" step="10">
+
+        <label for="worldMaxHeightInput">Max Height:</label>
+        <input type="number" id="worldMaxHeightInput" value="1000" min="100" step="10">
+
+        <label for="startingOrganismsInput">Starting Organisms:</label>
+        <input type="number" id="startingOrganismsInput" value="5000" min="10" step="10">
+
+        <label for="maxLifeSpanInput">Max Lifespan (Rounds):</label>
+        <input type="number" id="maxLifeSpanInput" value="10" min="1" step="1">
+
+        <label for="mutationProbabilityInput">Mutation Probability:</label>
+        <input type="number" id="mutationProbabilityInput" value="0.2" min="0" max="1" step="0.01">
+
+        <label for="regionCountInput">Region Count (Perfect Square):</label>
+        <input type="number" id="regionCountInput" value="900" min="4" step="1">
+
+        <label for="contourIntervalInput">Contour Interval:</label>
+        <input type="number" id="contourIntervalInput" value="100" min="10" step="10">
+
+        <button id="startSimBtn">Start Simulation</button>
+        <div id="errorMessage" style="display: none;"></div>
     </div>
     <canvas id="simulationCanvas"></canvas>
     <!-- The bundled script will be loaded here -->

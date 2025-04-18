@@ -4,7 +4,7 @@ export class Config {
   private constructor(
     public readonly worldSize: number = 1200,
     public readonly worldMaxHeight: number = 1000,
-    public readonly randomSeed: number = Date.now(),
+    public readonly randomSeed: number = 9969,
     public readonly startingOrganisms: number = 5000,
     public readonly maxLifeSpan: number = 10,
     public readonly deliberateMutationProbability: number = 0.2,
@@ -25,6 +25,7 @@ export class Config {
       params.worldSize ?? 1200,
       params.worldMaxHeight ?? 1000,
       params.randomSeed ?? Date.now(),
+      // params.randomSeed ?? 9969, // Use Date.now() for tests unless explicitly provided
       params.startingOrganisms ?? 5000,
       params.maxLifeSpan ?? 10,
       params.deliberateMutationProbability ?? 0.2,
