@@ -11,7 +11,7 @@ const DEBUG = true;
 
 // Simulation control
 let isSimulationRunning = false;
-const roundDelay = 500; // milliseconds between rounds
+const roundDelay = 10; // milliseconds between rounds
 
 // Get the canvas element
 const canvas = document.getElementById('simulationCanvas') as HTMLCanvasElement;
