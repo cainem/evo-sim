@@ -2,12 +2,9 @@ import { Config } from './Config';
 import { SeededRandom } from './utils/SeededRandom';
 import { WorldMap } from './WorldMap';
 import { OrganismParameters } from './types/OrganismParameters';
+import { BaseOrganism } from './BaseOrganism';
 
-export class Organism {
-  private x: number;
-  private y: number;
-  private roundsLived: number;
-  private markedForDeath: boolean = false;
+export class Organism extends BaseOrganism {
   private readonly deliberateMutationX: number;
   private readonly deliberateMutationY: number;
   private readonly offspringsXDistance: number;
@@ -21,74 +18,14 @@ export class Organism {
    */
   constructor(
     params: OrganismParameters,
-    private readonly config: Config,
+    config: Config,
     random?: SeededRandom
   ) {
-    // Ensure positions are stored as integers
-    this.x = Math.floor(params.x);
-    this.y = Math.floor(params.y);
+    super({ x: params.x, y: params.y, roundsLived: params.roundsLived }, config, random);
     this.deliberateMutationX = params.deliberateMutationX;
     this.deliberateMutationY = params.deliberateMutationY;
     this.offspringsXDistance = params.offspringsXDistance;
     this.offspringsYDistance = params.offspringsYDistance;
-
-    // For initial organisms, randomly set roundsLived if not provided
-    if (params.roundsLived !== undefined) {
-      this.roundsLived = params.roundsLived;
-    } else {
-      if (!random) {
-        throw new Error('SeededRandom instance required for initial organisms');
-      }
-      this.roundsLived = random.nextInt(0, Math.floor(config.maxLifeSpan / 2));
-    }
-  }
-
-  /**
-   * Increments the organism's age by one round
-   */
-  public age(): void {
-    this.roundsLived++;
-    // Mark for death if max lifespan has been reached
-    if (this.roundsLived >= this.config.maxLifeSpan) {
-      this.markedForDeath = true;
-    }
-  }
-
-  /**
-   * Checks if the organism has reached its maximum lifespan
-   * This now returns whether the organism is marked for death
-   */
-  public isDead(): boolean {
-    return this.markedForDeath;
-  }
-
-  /**
-   * Checks if the organism has reached its maximum lifespan
-   * This is used during the marking phase
-   */
-  public shouldDie(): boolean {
-    return this.roundsLived >= this.config.maxLifeSpan;
-  }
-
-  /**
-   * Marks the organism for death
-   */
-  public markForDeath(): void {
-    this.markedForDeath = true;
-  }
-
-  /**
-   * Gets the organism's current position
-   */
-  public getPosition(): { x: number; y: number } {
-    return { x: this.x, y: this.y };
-  }
-
-  /**
-   * Gets the organism's current age in rounds
-   */
-  public getRoundsLived(): number {
-    return this.roundsLived;
   }
 
   /**
@@ -114,9 +51,9 @@ export class Organism {
    */
   public getParameters(): OrganismParameters {
     return {
-      x: this.x,
-      y: this.y,
-      roundsLived: this.roundsLived,
+      x: this.getPosition().x,
+      y: this.getPosition().y,
+      roundsLived: this.getRoundsLived(),
       deliberateMutationX: this.deliberateMutationX,
       deliberateMutationY: this.deliberateMutationY,
       offspringsXDistance: this.offspringsXDistance,
@@ -140,10 +77,10 @@ export class Organism {
       
       // Add bounds checking before calling getHeight
       const worldSize = config.worldSize;
-      const isValidPos = this.x >= 0 && this.x < worldSize && this.y >= 0 && this.y < worldSize;
-      const height = isValidPos ? worldMap.getHeight(this.x, this.y) : 'OUT_OF_BOUNDS';
+      const isValidPos = this.getPosition().x >= 0 && this.getPosition().x < worldSize && this.getPosition().y >= 0 && this.getPosition().y < worldSize;
+      const height = isValidPos ? worldMap.getHeight(this.getPosition().x, this.getPosition().y) : 'OUT_OF_BOUNDS';
       
-      console.log('Parent position:', this.x, this.y, 'Height:', height);
+      console.log('Parent position:', this.getPosition().x, this.getPosition().y, 'Height:', height);
       console.log('Parent mutation values:', {
         deliberateMutationX: this.deliberateMutationX,
         deliberateMutationY: this.deliberateMutationY,
@@ -169,17 +106,17 @@ export class Organism {
     
     // Calculate offspring position using parent's position and offset
     const newX = this.calculateWrappedCoordinate(
-      this.x + offsetX,
+      this.getPosition().x + offsetX,
       config.worldSize
     );
     const newY = this.calculateWrappedCoordinate(
-      this.y + offsetY,
+      this.getPosition().y + offsetY,
       config.worldSize
     );
 
     // Calculate single-step distances for logging/verification
-    const singleStepXDistance = newX - this.x;
-    const singleStepYDistance = newY - this.y;
+    const singleStepXDistance = newX - this.getPosition().x;
+    const singleStepYDistance = newY - this.getPosition().y;
 
     // Calculate cumulative offspring distance based on PDD and clamp to [-5, 5]
     const cumulativeOffspringXDistance = Organism.clampToRange(
@@ -258,7 +195,6 @@ export class Organism {
   private static clampToRange(value: number, min: number, max: number): number {
     return Math.max(min, Math.min(max, value));
   }
-
 
   /**
    * Calculates wrapped coordinate for world boundaries, ensuring integer result
