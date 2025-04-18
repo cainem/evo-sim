@@ -29,6 +29,7 @@ DeliberateMutationY: Integer: -1, 0, or 1. Initialized to 0.
 OffspringsXDistance: Integer. Initialized to 0.
 OffspringsYDistance: Integer. Initialized to 0.
 Lifespan: Organisms live for a maximum of Config.MaxLifeSpan rounds (Initial: 10).
+The PRNG is initialized once from a single seed value (RandomSeed, Initial: 42) allowing the results to be fully deterministic.
 4. Simulation Loop (Round-Based)
 
 Each round proceeds as follows:
@@ -92,6 +93,7 @@ Organisms: Represent each organism by a 3x3 pixel square centered at its (x, y) 
 Flags:
 Mark the highest sampled point in the entire world with a small red flag/marker.
 UI Overlays: Display the current Round Number and Total Population count, typically in a corner (e.g., top-left).
+Allowing the setting of the random seed so the user can control the results of the simulation.
 8. Configuration (Config Class/Object)
 
 Consolidate all simulation parameters:
@@ -112,5 +114,3 @@ Testing: Implement unit tests for all core logic functions (height generation, o
 Coverage: Aim for full statement, branch, and condition coverage where practical.
 Mocking: Minimize mocking. Mocking the PRNG (e.g., providing a predictable sequence or fixed values) is acceptable and recommended for testing probabilistic paths (mutations, tie-breaking).
 Test Descriptions: Clearly describe the behavior being tested and the expected outcome, ensuring alignment with this PDD.
-Proposed Incremental Development Steps
-Here's a suggested breakdown into logical, checkpoint-able steps suitable for prompting an AI assistant. Assume you're working within a TypeScript project environment.

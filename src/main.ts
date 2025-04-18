@@ -15,71 +15,58 @@ const roundDelay = 500; // milliseconds between rounds
 
 // Get the canvas element
 const canvas = document.getElementById('simulationCanvas') as HTMLCanvasElement;
+const seedInput = document.getElementById('seedInput') as HTMLInputElement;
+const startSimBtn = document.getElementById('startSimBtn') as HTMLButtonElement;
+const seedInputContainer = document.getElementById('seedInputContainer');
 
-if (canvas) {
-    // Get config instance
-    const config = Config.getInstance();
-    
+function startSimulationWithSeed(seed: number) {
+    if (!canvas) {
+        console.error('Canvas element #simulationCanvas not found!');
+        return;
+    }
+    // Hide the seed input UI
+    if (seedInputContainer) seedInputContainer.style.display = 'none';
+
+    // Create config with user seed
+    const config = Config.createCustomConfig({ randomSeed: seed });
     // Create a seeded random number generator
     const random = new SeededRandom(config.randomSeed);
-    
     // Create the world map
     const worldMap = new WorldMap(config, random);
-
     // Create region manager and calculate regions
     const regionManager = new RegionManager(config, worldMap);
     regionManager.calculateRegions();
     const regions = regionManager.getRegions();
-    
+
     if (DEBUG) {
         console.log('Regions created:', regions.length);
         regions.forEach((region, index) => {
             console.log(`Region ${index}:`, region.getBounds(), region.getStatistics());
         });
     }
-    
     // Create simulation with regions
     const simulation = new Simulation(config, worldMap, random, regions);
     simulation.initialize();
-    
+
     if (DEBUG) {
         const organisms = simulation.getOrganisms();
         console.log('Organisms created:', organisms.length);
         organisms.forEach((organism, index) => {
-            if (index < 5) { // Just log the first 5 to avoid console spam
+            if (index < 5) {
                 console.log(`Organism ${index}:`, organism.getPosition());
             }
         });
     }
-    
     try {
-        // Create the visualizer instance
         const visualizer = new Visualizer(canvas);
-        
-        // Set the world map to visualize
         visualizer.setWorldMap(worldMap);
-        
-        // Check that CSS2DRenderer is properly initialized
         if (DEBUG) {
             console.log('CSS2DRenderer initialized:', visualizer);
         }
-        
-        // Default world highest point
         let worldHighestPoint = { x: 0, y: 0, height: 0 };
-        
-        // Visualize regions, organisms and flags
         try {
-            // Draw regions
-            console.log('Drawing regions...');
             visualizer.drawRegions(regions);
-            
-            // Draw organisms
-            console.log('Drawing organisms...');
-            const organisms = simulation.getOrganisms();
-            visualizer.drawOrganisms(organisms);
-            
-            // Calculate and draw highest point flags
-            console.log('Calculating highest point...');
+            visualizer.drawOrganisms(simulation.getOrganisms());
             const allRegionStats = regions.map(r => r.getStatistics());
             worldHighestPoint = allRegionStats.reduce((highest, stat) => {
                 if (stat.highestPoint && stat.highestPoint.height > highest.height) {
@@ -87,36 +74,39 @@ if (canvas) {
                 }
                 return highest;
             }, { x: 0, y: 0, height: 0 });
-            
-            console.log('World highest point:', worldHighestPoint);
             visualizer.drawFlags(worldHighestPoint);
-            
-            console.log('All visualization methods called successfully');
         } catch (e) {
             console.error('Error during visualization:', e);
         }
-        
-        // Start the render loop
         visualizer.startRenderLoop();
-        
-        // Initialize UI overlay with initial values
         visualizer.updateUIOverlay(simulation.getRoundNumber(), simulation.getOrganismCount());
-        
-        // Set up simulation controls
         setupSimulationControls(simulation, visualizer, regions, worldHighestPoint);
-
-        // Add cleanup logic when the page unloads
         window.addEventListener('beforeunload', () => {
-            visualizer.dispose(); 
+            visualizer.dispose();
         });
-
         console.log("Visualizer initialized with terrain, regions, organisms, and flags.");
-
     } catch (error) {
         console.error("Error during Visualizer initialization or setup:", error);
     }
-} else {
-    console.error('Canvas element #simulationCanvas not found!');
+}
+
+if (startSimBtn) {
+    startSimBtn.onclick = () => {
+        let seed = parseInt(seedInput?.value || '', 10);
+        if (isNaN(seed) || seed < 0 || seed > 4294967295) {
+            // Use default seed if not provided or invalid
+            seed = 42;
+        }
+        startSimulationWithSeed(seed);
+    };
+}
+// Optionally, allow pressing Enter in the input to start
+if (seedInput) {
+    seedInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            startSimBtn?.click();
+        }
+    });
 }
 
 /**

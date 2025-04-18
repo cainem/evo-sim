@@ -11,10 +11,10 @@ describe('Config', () => {
     expect(config).toBeDefined();
     expect(config.worldSize).toBe(1200);
     expect(config.worldMaxHeight).toBe(1000);
-    expect(config.startingOrganisms).toBe(1000);
+    expect(config.startingOrganisms).toBe(5000);
     expect(config.maxLifeSpan).toBe(10);
     expect(config.deliberateMutationProbability).toBe(0.2);
-    expect(config.regionCount).toBe(100);
+    expect(config.regionCount).toBe(900);
     expect(config.contourLineInterval).toBe(100);
   });
 

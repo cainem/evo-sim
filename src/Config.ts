@@ -25,10 +25,10 @@ export class Config {
       params.worldSize ?? 1200,
       params.worldMaxHeight ?? 1000,
       params.randomSeed ?? Date.now(),
-      params.startingOrganisms ?? 1000,
+      params.startingOrganisms ?? 5000,
       params.maxLifeSpan ?? 10,
       params.deliberateMutationProbability ?? 0.2,
-      params.regionCount ?? 100, // Must be a perfect square (10x10)
+      params.regionCount ?? 900, // Must be a perfect square (30x30)
       params.contourLineInterval ?? 100,
       true // Mark as test environment for customized configs
     );
