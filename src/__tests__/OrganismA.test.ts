@@ -1,5 +1,5 @@
 import { Config } from '../Config';
-import { Organism } from '../Organism';
+import { OrganismA } from '../OrganismA';
 import { OrganismParameters } from '../types/OrganismParameters';
 
 describe('Organism parameter methods', () => {
@@ -19,7 +19,7 @@ describe('Organism parameter methods', () => {
       offspringsXDistance: 3,
       offspringsYDistance: -2
     };
-    const organism = new Organism(params, config);
+    const organism = new OrganismA(params, config);
     expect(organism.getMutationParameters()).toEqual({
       deliberateMutationX: params.deliberateMutationX,
       deliberateMutationY: params.deliberateMutationY,
@@ -38,7 +38,7 @@ describe('Organism parameter methods', () => {
       offspringsXDistance: 2,
       offspringsYDistance: 5
     };
-    const organism = new Organism(params, config);
+    const organism = new OrganismA(params, config);
     expect(organism.getParameters()).toEqual({
       x: Math.floor(params.x),
       y: Math.floor(params.y),

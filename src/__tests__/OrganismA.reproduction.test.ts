@@ -1,5 +1,5 @@
 import { Config } from '../Config';
-import { Organism } from '../Organism';
+import { OrganismA } from '../OrganismA';
 import { WorldMap } from '../WorldMap';
 import { SeededRandom } from '../utils/SeededRandom';
 
@@ -23,7 +23,7 @@ describe('Organism Reproduction', () => {
 
   describe('State Copying', () => {
     it('should create offspring with reset rounds lived', () => {
-      const parent = new Organism({
+      const parent = new OrganismA({
         x: 50,
         y: 50,
         roundsLived: 5,
@@ -42,7 +42,7 @@ describe('Organism Reproduction', () => {
       const noMutationRandom = new SeededRandom(testSeed);
       jest.spyOn(noMutationRandom, 'nextBoolean').mockReturnValue(false);
 
-      const parent = new Organism({
+      const parent = new OrganismA({
         x: 50,
         y: 50,
         roundsLived: 0,
@@ -71,7 +71,7 @@ describe('Organism Reproduction', () => {
         .mockReturnValueOnce(true)  // Trigger Y mutation
         .mockReturnValueOnce(false); // Y mutation to -1
 
-      const parent = new Organism({
+      const parent = new OrganismA({
         x: 50,
         y: 50,
         roundsLived: 0,
@@ -92,7 +92,7 @@ describe('Organism Reproduction', () => {
       const mutationRandom = new SeededRandom(testSeed);
       jest.spyOn(mutationRandom, 'nextBoolean').mockReturnValue(true);
 
-      const parent = new Organism({
+      const parent = new OrganismA({
         x: 50,
         y: 50,
         roundsLived: 0,
@@ -111,7 +111,7 @@ describe('Organism Reproduction', () => {
 
   describe('Clamping of Offspring Distances', () => {
     it('should clamp offspringsXDistance to -5 if parent+mutation < -5', () => {
-      const parent = new Organism({
+      const parent = new OrganismA({
         x: 0,
         y: 0,
         roundsLived: 0,
@@ -128,7 +128,7 @@ describe('Organism Reproduction', () => {
       expect(params.offspringsXDistance).toBe(-5);
     });
     it('should clamp offspringsXDistance to 5 if parent+mutation > 5', () => {
-      const parent = new Organism({
+      const parent = new OrganismA({
         x: 0,
         y: 0,
         roundsLived: 0,
@@ -147,7 +147,7 @@ describe('Organism Reproduction', () => {
       expect(params.offspringsXDistance).toBe(5);
     });
     it('should clamp offspringsYDistance to -5 if parent+mutation < -5', () => {
-      const parent = new Organism({
+      const parent = new OrganismA({
         x: 0,
         y: 0,
         roundsLived: 0,
@@ -163,7 +163,7 @@ describe('Organism Reproduction', () => {
       expect(params.offspringsYDistance).toBe(-5);
     });
     it('should clamp offspringsYDistance to 5 if parent+mutation > 5', () => {
-      const parent = new Organism({
+      const parent = new OrganismA({
         x: 0,
         y: 0,
         roundsLived: 0,
@@ -181,7 +181,7 @@ describe('Organism Reproduction', () => {
       expect(params.offspringsYDistance).toBe(5);
     });
     it('should not clamp if within range', () => {
-      const parent = new Organism({
+      const parent = new OrganismA({
         x: 0,
         y: 0,
         roundsLived: 0,
@@ -201,7 +201,7 @@ describe('Organism Reproduction', () => {
 
   describe('Position Calculation', () => {
     it('should not apply offset when deliberateMutation is 0', () => {
-      const parent = new Organism({
+      const parent = new OrganismA({
         x: 50,
         y: 50,
         roundsLived: 0,
@@ -219,7 +219,7 @@ describe('Organism Reproduction', () => {
     });
 
     it('should apply offset when deliberateMutation is non-zero', () => {
-      const parent = new Organism({
+      const parent = new OrganismA({
         x: 50,
         y: 50,
         roundsLived: 0,
@@ -237,7 +237,7 @@ describe('Organism Reproduction', () => {
     });
     
     it('should handle world wrap-around with non-zero mutation', () => {
-      const parent = new Organism({
+      const parent = new OrganismA({
         x: 90,
         y: 10,
         roundsLived: 0,

@@ -4,7 +4,7 @@ import { WorldMap } from './WorldMap';
 import { OrganismParameters } from './types/OrganismParameters';
 import { BaseOrganism } from './BaseOrganism';
 
-export class Organism extends BaseOrganism {
+export class OrganismA extends BaseOrganism {
   private readonly deliberateMutationX: number;
   private readonly deliberateMutationY: number;
   private readonly offspringsXDistance: number;
@@ -68,7 +68,7 @@ export class Organism extends BaseOrganism {
     config: Config,
     random: SeededRandom,
     worldMap: WorldMap
-  ): Organism {
+  ): OrganismA {
     // Only log in non-test environment
     const isTestEnvironment = config.isTestEnvironment;
     
@@ -119,12 +119,12 @@ export class Organism extends BaseOrganism {
     const singleStepYDistance = newY - this.getPosition().y;
 
     // Calculate cumulative offspring distance based on PDD and clamp to [-5, 5]
-    const cumulativeOffspringXDistance = Organism.clampToRange(
+    const cumulativeOffspringXDistance = OrganismA.clampToRange(
       this.offspringsXDistance + newDeliberateMutationX,
       -5,
       5
     );
-    const cumulativeOffspringYDistance = Organism.clampToRange(
+    const cumulativeOffspringYDistance = OrganismA.clampToRange(
       this.offspringsYDistance + newDeliberateMutationY,
       -5,
       5
@@ -151,7 +151,7 @@ export class Organism extends BaseOrganism {
     }
 
     // Create and return the new offspring
-    return new Organism({
+    return new OrganismA({
       x: newX,
       y: newY,
       roundsLived: 0,

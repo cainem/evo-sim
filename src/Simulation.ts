@@ -1,12 +1,12 @@
 import { Config } from './Config';
 import { WorldMap } from './WorldMap';
 import { SeededRandom } from './utils/SeededRandom';
-import { Organism } from './Organism';
+import { OrganismA } from './OrganismA';
 import { OrganismParameters } from './types/OrganismParameters';
 import { Region } from './Region';
 
 export class Simulation {
-  private organisms: Organism[] = [];
+  private organisms: OrganismA[] = [];
   private roundNumber: number = 0;
   private regions: Region[] = [];
 
@@ -38,7 +38,7 @@ export class Simulation {
         offspringsYDistance: 0  // Initialize to 0 per PDD
       };
 
-      this.organisms.push(new Organism(params, this.config, this.random));
+      this.organisms.push(new OrganismA(params, this.config, this.random));
     }
   }
 
@@ -94,7 +94,7 @@ export class Simulation {
    * Gets a copy of the current organisms array
    * Useful for testing and observation
    */
-  public getOrganisms(): Organism[] {
+  public getOrganisms(): OrganismA[] {
     return [...this.organisms];
   }
 
@@ -109,7 +109,7 @@ export class Simulation {
   /**
    * Initializes the simulation with specific organisms (for testing)
    */
-  public initializeWithOrganisms(organisms: Organism[]): void {
+  public initializeWithOrganisms(organisms: OrganismA[]): void {
     this.organisms = [...organisms];
   }
 
@@ -117,8 +117,8 @@ export class Simulation {
    * Handles reproduction for all regions
    * @returns Array of new offspring
    */
-  private handleReproduction(): Organism[] {
-    const newOffspring: Organism[] = [];
+  private handleReproduction(): OrganismA[] {
+    const newOffspring: OrganismA[] = [];
     const regionMap = this.groupOrganismsByRegion();
 
     // Process each region
@@ -245,8 +245,8 @@ export class Simulation {
    * Groups organisms by their region index
    * Organisms marked for death are excluded from the population count
    */
-  private groupOrganismsByRegion(): Map<number, Organism[]> {
-    const regionMap = new Map<number, Organism[]>();
+  private groupOrganismsByRegion(): Map<number, OrganismA[]> {
+    const regionMap = new Map<number, OrganismA[]>();
 
     // Initialize empty arrays for each region
     for (let i = 0; i < this.regions.length; i++) {

@@ -1,5 +1,5 @@
 import { Config } from '../Config';
-import { Organism } from '../Organism';
+import { OrganismA } from '../OrganismA';
 import { WorldMap } from '../WorldMap';
 import { Region } from '../Region';
 import { SeededRandom } from '../utils/SeededRandom';
@@ -50,10 +50,10 @@ describe('Simulation Reproduction', () => {
   describe('Region-based Selection', () => {
     beforeEach(() => {
       // Initialize simulation with test organisms
-      const organisms: Organism[] = [];
+      const organisms: OrganismA[] = [];
       for (let i = 0; i < 4; i++) {
         for (let j = 0; j < 5; j++) {
-          organisms.push(new Organism({
+          organisms.push(new OrganismA({
             x: 25 + i * 50, // Places organisms in each region
             y: 25 + j * 10,
             roundsLived: 2, // All eligible for reproduction
@@ -116,10 +116,10 @@ describe('Simulation Reproduction', () => {
       
       // Initialize with 20 organisms (CARRYING_CAPACITY = 30, so 10 more can be born)
       const TEST_ORGANISM_COUNT = 20;
-      const initialOrganisms: Organism[] = [];
+      const initialOrganisms: OrganismA[] = [];
       
       for (let i = 0; i < TEST_ORGANISM_COUNT; i++) {
-        initialOrganisms.push(new Organism({
+        initialOrganisms.push(new OrganismA({
           x: 25, // All in center
           y: 25, // All in center
           roundsLived: 2, // All eligible for reproduction
@@ -152,11 +152,11 @@ describe('Simulation Reproduction', () => {
 
     it('should only select eligible organisms', () => {
       // Create organisms with 0 rounds lived
-      const youngOrganisms: Organism[] = [];
+      const youngOrganisms: OrganismA[] = [];
       for (let i = 0; i < 4; i++) {
         for (let j = 0; j < 5; j++) {
           // Create organisms that are too young to reproduce
-          const organism = new Organism({
+          const organism = new OrganismA({
             x: 25 + i * 50,
             y: 25 + j * 10,
             roundsLived: 0, // Set to 0 to make them ineligible for reproduction
@@ -187,7 +187,7 @@ describe('Simulation Reproduction', () => {
         
         // Count eligible parents across all regions
         for (const [regionIndex, organisms] of organismsByRegion.entries()) {
-          const eligibleParents = organisms.filter((org: Organism) => org.getRoundsLived() >= 1);
+          const eligibleParents = organisms.filter((org: OrganismA) => org.getRoundsLived() >= 1);
           eligibleParentsCount += eligibleParents.length;
         }
         
@@ -209,12 +209,12 @@ describe('Simulation Reproduction', () => {
 
     it('should sort by height and use random tiebreaker', () => {
       // Create organisms at same height to test tiebreaker
-      const sameHeightOrganisms: Organism[] = [];
+      const sameHeightOrganisms: OrganismA[] = [];
       const x = 25; // All in same region
       const y = 25; // All at same position (same height)
       
       for (let i = 0; i < 10; i++) {
-        sameHeightOrganisms.push(new Organism({
+        sameHeightOrganisms.push(new OrganismA({
           x,
           y,
           roundsLived: 2,

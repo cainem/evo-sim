@@ -2,7 +2,7 @@ import { Config } from '../Config';
 import { WorldMap } from '../WorldMap';
 import { SeededRandom } from '../utils/SeededRandom';
 import { Simulation } from '../Simulation';
-import { Organism } from '../Organism';
+import { OrganismA } from '../OrganismA';
 import { OrganismParameters } from '../types/OrganismParameters';
 import { Region } from '../Region';
 
@@ -250,7 +250,7 @@ describe.skip('Simulation', () => {
       const testSim = new Simulation(testConfig, testWorldMap, testRandom, testRegions);
 
       // Manually initialize organisms with age 0 for deterministic death test
-      const initialOrganisms: Organism[] = [];
+      const initialOrganisms: OrganismA[] = [];
       const centerX = Math.floor(testConfig.worldSize / 2);
       const centerY = Math.floor(testConfig.worldSize / 2);
       for (let i = 0; i < testConfig.startingOrganisms; i++) {
@@ -264,7 +264,7 @@ describe.skip('Simulation', () => {
           offspringsXDistance: 0,
           offspringsYDistance: 0
         };
-        initialOrganisms.push(new Organism(params, testConfig, testRandom)); // Correct signature
+        initialOrganisms.push(new OrganismA(params, testConfig, testRandom)); // Correct signature
       }
       testSim.initializeWithOrganisms(initialOrganisms);
 

@@ -18,6 +18,11 @@ This function generates a static, relatively smooth landscape with multiple peak
 Randomness: All pseudo-random elements (initial organism age, mutations, height function parameters, tie-breaking) will use a seeded pseudo-random number generator (PRNG) initialized with Config.RandomSeed.
 3. Organisms
 
+Organism Types:
+- OrganismA (Original): reproduction rules as described in section 5.1.
+- OrganismB (Random): reproduction rules as described in section 5.2.
+Only one organism type is active per simulation, selected via a drop-down prior to startup.
+
 Initial State:
 Config.StartingOrganisms (Initial: 5000) are created at the start.
 All start at the center coordinates: (floor(Config.WorldSize / 2) - 1, floor(Config.WorldSize / 2) - 1).
@@ -50,7 +55,13 @@ Death (b): Remove organisms that have been marked for death.
 Update Counters: Update overall round and population counters.
 5. Reproduction Mechanics
 
+Reproduction rules vary by organism type:
+- OrganismA: standard mutation-based reproduction (see 5.1).
+- OrganismB: random-offset reproduction (see 5.2).
+
 When a parent organism reproduces:
+
+5.1. OrganismA Reproduction Rules:
 
 State Inheritance: Child inherits parent's state before potential mutations, except RoundsLived is set to 0.
 Mutation (DeliberateMutationX/Y):
@@ -73,6 +84,12 @@ Calculate new position:
 Child.X = (Parent.X + offsetX + Config.WorldSize) % Config.WorldSize
 Child.Y = (Parent.Y + offsetY + Config.WorldSize) % Config.WorldSize
 The child organism is added to the simulation at this new position.
+
+5.2. OrganismB Reproduction Rules:
+
+When an OrganismB reproduces, generate random dx and dy ∈ [-5,5].
+Child position: x = (parent.x + dx + Config.WorldSize) % Config.WorldSize, y = (parent.y + dy + Config.WorldSize) % Config.WorldSize.
+
 6. Regions
 
 Definition: The world is divided into a grid of Config.RegionCount (Initial: 900) square regions. Config.RegionCount must be a perfect square. Config.WorldSize must be an exact multiple of sqrt(Config.RegionCount).
