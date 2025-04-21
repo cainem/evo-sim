@@ -4,7 +4,7 @@ import { WorldMap } from './WorldMap';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { Region } from './Region';
-import { OrganismA } from './OrganismA';
+import { BaseOrganism } from './BaseOrganism';
 
 export class Visualizer {
   private scene: THREE.Scene;
@@ -597,7 +597,7 @@ console.log('[Visualizer] computeVertexNormals completed');
    * Uses InstancedMesh for efficient rendering of many organisms
    * @param organisms Array of organisms to visualize
    */
-  public drawOrganisms(organisms: OrganismA[]): void {
+  public drawOrganisms(organisms: BaseOrganism[]): void {
     console.log('[Visualizer] drawOrganisms called', { organismCount: organisms.length });
     console.log(`Drawing ${organisms.length} organisms`);
     

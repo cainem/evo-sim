@@ -2,11 +2,13 @@ import { Config } from './Config';
 import { WorldMap } from './WorldMap';
 import { SeededRandom } from './utils/SeededRandom';
 import { OrganismA } from './OrganismA';
+import { OrganismB } from './OrganismB';
 import { OrganismParameters } from './types/OrganismParameters';
 import { Region } from './Region';
+import { BaseOrganism } from './BaseOrganism';
 
 export class Simulation {
-  private organisms: OrganismA[] = [];
+  private organisms: BaseOrganism[] = [];
   private roundNumber: number = 0;
   private regions: Region[] = [];
 
@@ -28,17 +30,19 @@ export class Simulation {
 
     // Create starting organisms at the center
     for (let i = 0; i < this.config.startingOrganisms; i++) {
-      const params: OrganismParameters = {
-        x: centerX,
-        y: centerY,
-        // According to the PDD, deliberateMutation values should only be -1, 0, or 1
-        deliberateMutationX: this.getRandomMutationValue(),
-        deliberateMutationY: this.getRandomMutationValue(),
-        offspringsXDistance: 0, // Initialize to 0 per PDD
-        offspringsYDistance: 0  // Initialize to 0 per PDD
-      };
-
-      this.organisms.push(new OrganismA(params, this.config, this.random));
+      if (this.config.organismType === 'A') {
+        const params: OrganismParameters = {
+          x: centerX,
+          y: centerY,
+          deliberateMutationX: this.getRandomMutationValue(),
+          deliberateMutationY: this.getRandomMutationValue(),
+          offspringsXDistance: 0,
+          offspringsYDistance: 0
+        };
+        this.organisms.push(new OrganismA(params, this.config, this.random));
+      } else {
+        this.organisms.push(new OrganismB({ x: centerX, y: centerY }, this.config, this.random));
+      }
     }
   }
 
@@ -94,7 +98,7 @@ export class Simulation {
    * Gets a copy of the current organisms array
    * Useful for testing and observation
    */
-  public getOrganisms(): OrganismA[] {
+  public getOrganisms(): BaseOrganism[] {
     return [...this.organisms];
   }
 
@@ -109,7 +113,7 @@ export class Simulation {
   /**
    * Initializes the simulation with specific organisms (for testing)
    */
-  public initializeWithOrganisms(organisms: OrganismA[]): void {
+  public initializeWithOrganisms(organisms: BaseOrganism[]): void {
     this.organisms = [...organisms];
   }
 
@@ -117,8 +121,8 @@ export class Simulation {
    * Handles reproduction for all regions
    * @returns Array of new offspring
    */
-  private handleReproduction(): OrganismA[] {
-    const newOffspring: OrganismA[] = [];
+  private handleReproduction(): BaseOrganism[] {
+    const newOffspring: BaseOrganism[] = [];
     const regionMap = this.groupOrganismsByRegion();
 
     // Process each region
@@ -206,18 +210,19 @@ export class Simulation {
             console.log(`Selected ${numParents} parents for reproduction`);
           }
           for (let i = 0; i < numParents; i++) {
-            const parent = eligibleParents[i];
-            const parentPos = parent.getPosition();
-            const parentHeight = this.worldMap.getHeight(parentPos.x, parentPos.y);
-            if (!this.config.isTestEnvironment) {
-              console.log(`Parent ${i} at (${parentPos.x},${parentPos.y}), height: ${parentHeight}`);
+            let offspring;
+            if (this.config.organismType === 'A') {
+              offspring = (eligibleParents[i] as OrganismA).reproduce(
+                this.config,
+                this.random,
+                this.worldMap
+              );
+            } else {
+              offspring = (eligibleParents[i] as OrganismB).reproduce(
+                this.config,
+                this.random
+              );
             }
-            
-            const offspring = parent.reproduce(
-              this.config,
-              this.random,
-              this.worldMap
-            );
             
             // Ensure offspring has valid coordinates before adding
             const pos = offspring.getPosition();
@@ -245,8 +250,8 @@ export class Simulation {
    * Groups organisms by their region index
    * Organisms marked for death are excluded from the population count
    */
-  private groupOrganismsByRegion(): Map<number, OrganismA[]> {
-    const regionMap = new Map<number, OrganismA[]>();
+  private groupOrganismsByRegion(): Map<number, BaseOrganism[]> {
+    const regionMap = new Map<number, BaseOrganism[]>();
 
     // Initialize empty arrays for each region
     for (let i = 0; i < this.regions.length; i++) {

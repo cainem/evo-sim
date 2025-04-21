@@ -59,4 +59,22 @@ export abstract class BaseOrganism {
   public getRoundsLived(): number {
     return this.roundsLived;
   }
+
+  /**
+   * Gets mutation parameters (deliberate mutation and offspring distances).
+   * Default implementation returns zeros; override in subclasses as needed.
+   */
+  public getMutationParameters(): {
+    deliberateMutationX: number;
+    deliberateMutationY: number;
+    offspringsXDistance: number;
+    offspringsYDistance: number;
+  } {
+    return {
+      deliberateMutationX: 0,
+      deliberateMutationY: 0,
+      offspringsXDistance: 0,
+      offspringsYDistance: 0
+    };
+  }
 }

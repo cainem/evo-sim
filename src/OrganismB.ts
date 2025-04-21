@@ -6,6 +6,18 @@ import { SeededRandom } from './utils/SeededRandom';
  * Type B organism reproducing with random offset in [-5,5]
  */
 export class OrganismB extends BaseOrganism {
+  /**
+   * Gets mutation parameters; for type B, use zeros.
+   */
+  public getMutationParameters(): {
+    deliberateMutationX: number;
+    deliberateMutationY: number;
+    offspringsXDistance: number;
+    offspringsYDistance: number;
+  } {
+    return { deliberateMutationX: 0, deliberateMutationY: 0, offspringsXDistance: 0, offspringsYDistance: 0 };
+  }
+
   constructor(
     params: { x: number; y: number; roundsLived?: number },
     config: Config,

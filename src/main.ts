@@ -25,6 +25,7 @@ const maxLifeSpanInput = document.getElementById('maxLifeSpanInput') as HTMLInpu
 const mutationProbabilityInput = document.getElementById('mutationProbabilityInput') as HTMLInputElement;
 const regionCountInput = document.getElementById('regionCountInput') as HTMLInputElement;
 const contourIntervalInput = document.getElementById('contourIntervalInput') as HTMLInputElement;
+const organismTypeInput = document.getElementById('organismTypeInput') as HTMLSelectElement;
 const startSimBtn = document.getElementById('startSimBtn') as HTMLButtonElement;
 const errorMessageDiv = document.getElementById('errorMessage') as HTMLDivElement;
 
@@ -63,8 +64,9 @@ function readConfigFromUI(): Config | null {
         return null;
     } else {
         errorMessageDiv.style.display = 'none';
+        const organismType = organismTypeInput.value as 'A' | 'B';
         // Create config with user inputs - mark as non-test
-        return Config.createCustomConfig({ ...values, isTestEnvironment: false });
+        return Config.createCustomConfig({ ...values, isTestEnvironment: false, organismType });
     }
 }
 
@@ -154,10 +156,11 @@ if (startSimBtn) {
     };
 }
 // Add event listeners for Enter key on all inputs
-const configInputs = [randomSeedInput, worldSizeInput, worldMaxHeightInput, startingOrganismsInput, maxLifeSpanInput, mutationProbabilityInput, regionCountInput, contourIntervalInput];
+const configInputs = [randomSeedInput, worldSizeInput, worldMaxHeightInput, startingOrganismsInput, maxLifeSpanInput, mutationProbabilityInput, regionCountInput, contourIntervalInput, organismTypeInput];
 configInputs.forEach(input => {
     if (input) {
-        input.addEventListener('keydown', (e) => {
+        input.addEventListener('keydown', (evt) => {
+            const e = evt as KeyboardEvent;
             if (e.key === 'Enter') {
                 startSimBtn?.click();
             }

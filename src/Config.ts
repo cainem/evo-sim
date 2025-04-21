@@ -10,7 +10,8 @@ export class Config {
     public readonly deliberateMutationProbability: number = 0.2,
     public readonly regionCount: number = 900, // Must be a perfect square (10x10)
     public readonly contourLineInterval: number = 100,
-    public readonly isTestEnvironment: boolean = false
+    public readonly isTestEnvironment: boolean = false,
+    public readonly organismType: 'A' | 'B' = 'A'
   ) {}
 
   public static getInstance(): Config {
@@ -31,7 +32,8 @@ export class Config {
       params.deliberateMutationProbability ?? 0.2,
       params.regionCount ?? 900, // Must be a perfect square (30x30)
       params.contourLineInterval ?? 100,
-      true // Mark as test environment for customized configs
+      true, // Mark as test environment for customized configs
+      params.organismType ?? 'A'
     );
     return Config.instance;
   }
