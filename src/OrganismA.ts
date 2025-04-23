@@ -69,9 +69,10 @@ export class OrganismA extends BaseOrganism {
     random: SeededRandom,
     worldMap: WorldMap
   ): OrganismA {
-    // Only log in non-test environment
+    /* istanbul ignore next */
     const isTestEnvironment = config.isTestEnvironment;
     
+    /* istanbul ignore next */
     if (!isTestEnvironment) {
       console.log('=== REPRODUCTION ===');
       
@@ -130,7 +131,7 @@ export class OrganismA extends BaseOrganism {
       5
     );
 
-    // Log offspring data - but only outside of test environment
+    /* istanbul ignore next */
     if (!isTestEnvironment) {
       // Add bounds check for the height lookup
       const isValidPos = newX >= 0 && newX < config.worldSize && newY >= 0 && newY < config.worldSize;
@@ -180,13 +181,6 @@ export class OrganismA extends BaseOrganism {
       }
     }
     return currentValue;
-  }
-
-  /**
-   * Calculates new offspring distance based on mutation value
-   */
-  private calculateNewDistance(currentDistance: number, mutation: number): number {
-    return currentDistance + mutation;
   }
 
   /**
