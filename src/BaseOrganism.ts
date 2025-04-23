@@ -1,5 +1,6 @@
 import { SeededRandom } from './utils/SeededRandom';
 import { Config } from './Config';
+import { WorldMap } from './WorldMap';
 
 /**
  * Base class encapsulating common organism behaviors: aging, dying, and positioning.
@@ -77,4 +78,13 @@ export abstract class BaseOrganism {
       offspringsYDistance: 0
     };
   }
+
+  /**
+   * Creates an offspring; must be implemented by subclasses.
+   */
+  public abstract reproduce(
+    config: Config,
+    random: SeededRandom,
+    worldMap: WorldMap
+  ): BaseOrganism;
 }

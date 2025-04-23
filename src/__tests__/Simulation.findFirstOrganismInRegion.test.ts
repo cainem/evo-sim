@@ -2,6 +2,8 @@ import { Simulation } from '../Simulation';
 import { Region } from '../Region';
 import { BaseOrganism } from '../BaseOrganism';
 import { Config } from '../Config';
+import { SeededRandom } from '../utils/SeededRandom';
+import { WorldMap } from '../WorldMap';
 
 // Dummy subclass for testing
 class DummyOrganism extends BaseOrganism {
@@ -13,6 +15,11 @@ class DummyOrganism extends BaseOrganism {
   // No offspring needed for this test
   public override age(): void {
     super.age();
+  }
+
+  public reproduce(config: Config, random: SeededRandom, worldMap: WorldMap): BaseOrganism {
+    // stub implementation
+    return this;
   }
 }
 

@@ -3,16 +3,22 @@ import { BaseOrganism } from '../BaseOrganism';
 import { Config } from '../Config';
 import { SeededRandom } from '../utils/SeededRandom';
 import { Region } from '../Region';
+import { WorldMap } from '../WorldMap';
 
 describe('Simulation basic functionality', () => {
   let config: Config;
   let random: SeededRandom;
-  let worldMap: any;
+  let worldMap: WorldMap;
   let regions: Region[];
 
   class DummyOrganism extends BaseOrganism {
     constructor(x: number, y: number, roundsLived: number = 0) {
       super({ x, y, roundsLived }, Config.createCustomConfig({ worldSize: 10, maxLifeSpan: 5 }));
+    }
+
+    public reproduce(config: Config, random: SeededRandom, worldMap: WorldMap): BaseOrganism {
+      // stub implementation for abstract method
+      return this;
     }
   }
 

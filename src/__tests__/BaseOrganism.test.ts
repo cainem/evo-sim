@@ -1,6 +1,7 @@
 import { BaseOrganism } from '../BaseOrganism';
 import { Config } from '../Config';
 import { SeededRandom } from '../utils/SeededRandom';
+import { WorldMap } from '../WorldMap';
 
 describe('BaseOrganism', () => {
   // Minimal subclass for testing
@@ -11,6 +12,11 @@ describe('BaseOrganism', () => {
       random?: SeededRandom
     ) {
       super(params, config, random);
+    }
+
+    public reproduce(config: Config, random: SeededRandom, worldMap: WorldMap): BaseOrganism {
+      // stub for abstract method
+      return this;
     }
   }
 
