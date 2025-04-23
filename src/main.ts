@@ -24,7 +24,6 @@ const startingOrganismsInput = document.getElementById('startingOrganismsInput')
 const maxLifeSpanInput = document.getElementById('maxLifeSpanInput') as HTMLInputElement;
 const mutationProbabilityInput = document.getElementById('mutationProbabilityInput') as HTMLInputElement;
 const regionCountInput = document.getElementById('regionCountInput') as HTMLInputElement;
-const contourIntervalInput = document.getElementById('contourIntervalInput') as HTMLInputElement;
 const organismTypeInput = document.getElementById('organismTypeInput') as HTMLSelectElement;
 const startSimBtn = document.getElementById('startSimBtn') as HTMLButtonElement;
 const errorMessageDiv = document.getElementById('errorMessage') as HTMLDivElement;
@@ -42,7 +41,6 @@ function readConfigFromUI(): Config | null {
         maxLifeSpan: parseInt(maxLifeSpanInput.value, 10),
         deliberateMutationProbability: parseFloat(mutationProbabilityInput.value),
         regionCount: parseInt(regionCountInput.value, 10),
-        contourLineInterval: parseInt(contourIntervalInput.value, 10),
     };
 
     const errors: string[] = [];
@@ -56,7 +54,6 @@ function readConfigFromUI(): Config | null {
     if (isNaN(values.deliberateMutationProbability) || values.deliberateMutationProbability < 0 || values.deliberateMutationProbability > 1) errors.push('Invalid Mutation Probability (must be 0-1).');
     if (isNaN(values.regionCount) || values.regionCount < 4 || Math.sqrt(values.regionCount) % 1 !== 0) errors.push('Invalid Region Count (must be a perfect square >= 4).');
     if (values.worldSize % Math.sqrt(values.regionCount) !== 0) errors.push('World Size must be divisible by Sqrt(Region Count).');
-    if (isNaN(values.contourLineInterval) || values.contourLineInterval < 10) errors.push('Invalid Contour Interval (min 10).');
 
     if (errors.length > 0) {
         errorMessageDiv.innerHTML = errors.join('<br>');
@@ -176,7 +173,7 @@ if (startSimBtn) {
     };
 }
 // Add event listeners for Enter key on all inputs
-const configInputs = [randomSeedInput, worldSizeInput, worldMaxHeightInput, startingOrganismsInput, maxLifeSpanInput, mutationProbabilityInput, regionCountInput, contourIntervalInput, organismTypeInput];
+const configInputs = [randomSeedInput, worldSizeInput, worldMaxHeightInput, startingOrganismsInput, maxLifeSpanInput, mutationProbabilityInput, regionCountInput, organismTypeInput];
 configInputs.forEach(input => {
     if (input) {
         input.addEventListener('keydown', (evt) => {

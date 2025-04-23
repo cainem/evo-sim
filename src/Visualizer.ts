@@ -12,7 +12,6 @@ export class Visualizer {
   private renderer: THREE.WebGLRenderer;
   private labelRenderer: CSS2DRenderer;
   private planeMesh: THREE.Mesh | null = null;
-  private contourLines: THREE.LineSegments | null = null;
   private config: Config;
   private worldMap: WorldMap | null = null;
   private canvas: HTMLCanvasElement;
@@ -33,11 +32,6 @@ export class Visualizer {
   private roundCounterElement: HTMLDivElement | null = null;
   private organismCounterElement: HTMLDivElement | null = null;
 
-  // Contour line properties
-  private readonly contourLineLevels = 10;
-  private readonly contourLineColor = new THREE.Color(0xffffff); // White
-  private readonly contourOffset = 2.0; // Increased offset for better visibility
-  
   // Region and organism visualization properties
   private readonly regionLineColor = new THREE.Color(0x00ffff); // Bright cyan for region boundaries
   private readonly organismColor = new THREE.Color(0xffff00); // Bright yellow for organisms
@@ -141,7 +135,7 @@ export class Visualizer {
     
     // Re-enable actual terrain visualization
     // this.createDebugPattern(); // Keep commented out
-    this.updateTerrainVisualization(); // Updates terrain + contours
+    this.updateTerrainVisualization(); // Updates terrain
   }
   
   /**
@@ -250,128 +244,15 @@ export class Visualizer {
       }
     }
     geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-console.log('[Visualizer] geometry.setAttribute for color completed');
-geometry.attributes.color.needsUpdate = true;
-geometry.attributes.position.needsUpdate = true;
-console.log('[Visualizer] needsUpdate set for color and position');
-geometry.computeVertexNormals();
-console.log('[Visualizer] computeVertexNormals completed');
-// STOP HERE: Do not use THREE.Color or do any color math yet.
+    console.log('[Visualizer] geometry.setAttribute for color completed');
+    geometry.attributes.color.needsUpdate = true;
+    geometry.attributes.position.needsUpdate = true;
+    console.log('[Visualizer] needsUpdate set for color and position');
+    geometry.computeVertexNormals();
+    console.log('[Visualizer] computeVertexNormals completed');
+    // Stop of terrain update
   }
 
-  // --- Contour Line Generation ---
-
-  private _updateContourLines(map: WorldMap | null, worldSize: number, maxHeight: number): void {
-    if (!map) return;
-    if (this.contourLines) {
-      if (this.scene && typeof this.scene.remove === 'function') {
-        this.scene.remove(this.contourLines);
-      }
-      if (this.contourLines.geometry && typeof this.contourLines.geometry.dispose === 'function') {
-        this.contourLines.geometry.dispose();
-      }
-      if (this.contourLines.material && typeof (this.contourLines.material as any).dispose === 'function') {
-        (this.contourLines.material as THREE.Material).dispose();
-      }
-      this.contourLines = null;
-    }
-
-    const lineVertices: number[] = [];
-    const heightStep = maxHeight / (this.contourLineLevels + 1);
-    const width = worldSize; // Use worldSize for dimensions
-    const depth = worldSize;
-    const halfSize = worldSize / 2;
-
-    // We need the WorldMap instance to call getHeight
-    if (!map) {
-        console.error("Cannot update contour lines: WorldMap instance is missing.");
-        return;
-    }
-
-    // Helper to interpolate position on an edge based on the contour level
-    const interpolate = (p1: THREE.Vector3, p2: THREE.Vector3, level: number): THREE.Vector3 => {
-        // Ensure p1.y and p2.y are different (using Y for height)
-        if (Math.abs(p1.y - p2.y) < 1e-6) {
-            return p1.clone().lerp(p2, 0.5); 
-        }
-        const t = (level - p1.y) / (p2.y - p1.y); // Interpolate based on Y
-        // Interpolate world X and Z coordinates
-        const worldX = p1.x + t * (p2.x - p1.x);
-        const worldZ = p1.z + t * (p2.z - p1.z);
-        // Y position is the contour level, slightly offset upwards
-        return new THREE.Vector3(worldX, level + this.contourOffset, worldZ); // Height in Y
-    };
-
-    for (let i = 1; i <= this.contourLineLevels; i++) {
-        const level = i * heightStep;
-
-        for (let x = 0; x < width - 1; x++) {
-            for (let z = 0; z < depth - 1; z++) {
-                // Get world coordinates and heights for the 4 corners of the cell using map.getHeight()
-                const h00 = map.getHeight(x, z);
-                const h10 = map.getHeight(x + 1, z);
-                const h01 = map.getHeight(x, z + 1);
-                const h11 = map.getHeight(x + 1, z + 1);
-
-                // Use Y for height when creating points (World Coordinates)
-                const p00 = new THREE.Vector3(x - halfSize, h00, z - halfSize); // Y is height
-                const p10 = new THREE.Vector3(x + 1 - halfSize, h10, z - halfSize); // Y is height
-                const p01 = new THREE.Vector3(x - halfSize, h01, z + 1 - halfSize); // Y is height
-                const p11 = new THREE.Vector3(x + 1 - halfSize, h11, z + 1 - halfSize); // Y is height
-
-                // Determine Marching Squares case based on corners >= level (checking Y)
-                let caseIndex = 0;
-                if (p00.y >= level) caseIndex |= 1;
-                if (p10.y >= level) caseIndex |= 2;
-                if (p11.y >= level) caseIndex |= 4;
-                if (p01.y >= level) caseIndex |= 8;
-
-                // Skip cases where no lines are needed (all corners same side of level)
-                if (caseIndex === 0 || caseIndex === 15) continue;
-
-                // Calculate intersection points on edges (only if needed for the case)
-                let ptTop:    THREE.Vector3 | null = null; // Edge p01 - p11
-                let ptBottom: THREE.Vector3 | null = null; // Edge p00 - p10
-                let ptLeft:   THREE.Vector3 | null = null; // Edge p00 - p01
-                let ptRight:  THREE.Vector3 | null = null; // Edge p10 - p11
-
-                // Check which edges the contour level crosses (comparing Y)
-                if ((caseIndex & 8) !== (caseIndex & 4)) ptTop = interpolate(p01, p11, level);
-                if ((caseIndex & 1) !== (caseIndex & 2)) ptBottom = interpolate(p00, p10, level);
-                if ((caseIndex & 1) !== (caseIndex & 8)) ptLeft = interpolate(p00, p01, level);
-                if ((caseIndex & 2) !== (caseIndex & 4)) ptRight = interpolate(p10, p11, level);
-
-                // Add line segments based on the case index
-                const addSegment = (pt1: THREE.Vector3 | null, pt2: THREE.Vector3 | null) => {
-                    if (pt1 && pt2) {
-                        lineVertices.push(pt1.x, pt1.y, pt1.z, pt2.x, pt2.y, pt2.z);
-                    }
-                };
-
-                switch (caseIndex) {
-                    case 1: case 14: addSegment(ptLeft, ptBottom); break;
-                    case 2: case 13: addSegment(ptBottom, ptRight); break;
-                    case 3: case 12: addSegment(ptLeft, ptRight); break;
-                    case 4: case 11: addSegment(ptTop, ptRight); break;
-                    case 5:          addSegment(ptLeft, ptTop); addSegment(ptBottom, ptRight); break; // Ambiguous: Left-Top, Bottom-Right
-                    case 6: case 9:  addSegment(ptBottom, ptTop); break;
-                    case 7: case 8:  addSegment(ptLeft, ptTop); break;
-                    case 10:         addSegment(ptLeft, ptBottom); addSegment(ptTop, ptRight); break; // Ambiguous: Left-Bottom, Top-Right
-                }
-            }
-        }
-    }
-
-    // Create and add the LineSegments mesh if vertices were generated
-    if (lineVertices.length > 0) {
-        const geometry = new THREE.BufferGeometry();
-        geometry.setAttribute('position', new THREE.Float32BufferAttribute(lineVertices, 3));
-        const material = new THREE.LineBasicMaterial({ color: this.contourLineColor });
-        this.contourLines = new THREE.LineSegments(geometry, material);
-        this.scene.add(this.contourLines); // Uncommented to show contours
-    }
-} 
- 
   private onWindowResize(): void {
     const width = this.canvas.clientWidth;
     const height = this.canvas.clientHeight;
@@ -788,17 +669,6 @@ console.log('[Visualizer] computeVertexNormals completed');
       this.planeMesh = null;
     }
 
-    if (this.contourLines) {
-      this.scene.remove(this.contourLines);
-      if (this.contourLines.geometry) {
-        this.contourLines.geometry.dispose();
-      }
-      if (this.contourLines.material instanceof THREE.Material) {
-        this.contourLines.material.dispose();
-      }
-      this.contourLines = null;
-    }
-    
     // Dispose region visualization resources
     if (this.regionBoundaries) {
       this.scene.remove(this.regionBoundaries);

@@ -15,7 +15,6 @@ describe('Config', () => {
     expect(config.maxLifeSpan).toBe(10);
     expect(config.deliberateMutationProbability).toBe(0.2);
     expect(config.regionCount).toBe(900);
-    expect(config.contourLineInterval).toBe(100);
   });
 
   it('should create custom config with specified parameters', () => {

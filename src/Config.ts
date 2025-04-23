@@ -9,7 +9,6 @@ export class Config {
     public readonly maxLifeSpan: number = 10,
     public readonly deliberateMutationProbability: number = 0.2,
     public readonly regionCount: number = 900, // Must be a perfect square (10x10)
-    public readonly contourLineInterval: number = 100,
     public readonly isTestEnvironment: boolean = false,
     public readonly organismType: 'A' | 'B' = 'A'
   ) {}
@@ -26,12 +25,10 @@ export class Config {
       params.worldSize ?? 1200,
       params.worldMaxHeight ?? 1000,
       params.randomSeed ?? Date.now(),
-      // params.randomSeed ?? 9969, // Use Date.now() for tests unless explicitly provided
       params.startingOrganisms ?? 5000,
       params.maxLifeSpan ?? 10,
       params.deliberateMutationProbability ?? 0.2,
       params.regionCount ?? 900, // Must be a perfect square (30x30)
-      params.contourLineInterval ?? 100,
       true, // Mark as test environment for customized configs
       params.organismType ?? 'A'
     );

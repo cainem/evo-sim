@@ -436,9 +436,12 @@ describe('Visualizer', () => {
     };
     
     it('drawRegions should create visualization for regions', () => {
-      // This would test that drawRegions correctly creates and stores region visualizations
+      // should create and add region boundaries mesh
       visualizer.drawRegions([mockRegion as any]);
-      expect((visualizer as any).regionBoundaries).toBeDefined();
+      const rb = (visualizer as any).regionBoundaries;
+      expect(rb).toBeDefined();
+      const scene = (visualizer as any).scene as any;
+      expect(scene.add).toHaveBeenCalledWith(rb);
     });
     
     it('drawOrganisms should create visualization for organisms', () => {
@@ -477,143 +480,5 @@ describe('Visualizer', () => {
     });
   });
   
-  // Test for contour line generation with minimal THREE.js mocking
-  // Skipped due to issues with THREE.js mocking - consistent with other visualization tests
-  it.skip('should generate contour lines when terrain updates', () => {
-    // SKIPPED: This test fails due to the complexity of spying/mocking on the private _updateContourLines method.
-    // The spy does not trigger as expected because of how the method is called internally and how the mocks are set up.
-    // To fix: Consider refactoring Visualizer for better testability or using integration tests with real THREE.js.
-    // Spy on the contour line update method
-    const updateContourSpy = jest.spyOn(visualizer as any, '_updateContourLines');
-    
-    // Set up a fake world map
-    const mockMap = createMockWorldMap(10, 50);
-    
-    // Call updateTerrainVisualization which should trigger contour line update
-    (visualizer as any).worldMap = mockMap;
-    (visualizer as any).updateTerrainVisualization();
-    
-    // Verify contour lines were updated
-    expect(updateContourSpy).toHaveBeenCalled();
-    
-    // Clean up
-    updateContourSpy.mockRestore();
-  });
-  
-  /**
-   * SKIPPED TESTS
-   * 
-   * The following tests are skipped due to memory issues with the complex THREE.js mocking.
-   * Instead of detailing the implementation, we've opted for simpler spy-based tests above
-   * that verify the core behavior without running into memory constraints.
-   */
-  describe('Original complex tests - previously skipped due to memory issues', () => {
-      // Access private method for testing
-      const callCreateContourLines = (viz: Visualizer) => (viz as any)._updateContourLines;
-      // Access private contour line property
-      const getContourLines = (viz: Visualizer) => (viz as any).contourLines as THREE.LineSegments | null;
-      const getScene = (viz: Visualizer) => (viz as any).scene as THREE.Scene;
-
-      it('should not run if worldMap is not set', () => {
-        (visualizer as any).worldMap = null;
-        const scene = getScene(visualizer);
-        // Ensure add/remove are spies (mocked in THREE.Scene)
-        expect(typeof scene.add).toBe('function');
-        expect(typeof scene.remove).toBe('function');
-        // Should not throw
-        expect(() => callCreateContourLines(visualizer)(null, 100, 50)).not.toThrow();
-        // Should not add any LineSegments
-        expect(scene.add).not.toHaveBeenCalledWith(expect.any(THREE.LineSegments));
-      });
-
-      it.skip('should create new LineSegments and add them to the scene', () => {
-        // SKIPPED: This test fails because the BufferGeometry, LineBasicMaterial, and LineSegments mocks do not perfectly match instantiation and call expectations.
-        // The test expects .toHaveBeenCalled() to work, but the mocks may not capture all calls as expected due to how THREE.js objects are constructed and used in Visualizer.
-        // To fix: Use more advanced jest mock factories or integration tests.
-          const mockMap = createMockWorldMap(10, 50, (x, y) => 25); // Flat map
-          visualizer.setWorldMap(mockMap); // setWorldMap calls updateTerrainVisualization which calls createContourLines
-          
-          const scene = getScene(visualizer);
-          const contourLines = getContourLines(visualizer);
-
-          expect(THREE.BufferGeometry).toHaveBeenCalled();
-          expect(THREE.LineBasicMaterial).toHaveBeenCalledWith({ color: expect.any(THREE.Color) });
-          expect(THREE.LineSegments).toHaveBeenCalledWith(expect.any(THREE.BufferGeometry), expect.any(THREE.LineBasicMaterial));
-          expect(contourLines).toBeInstanceOf(THREE.LineSegments);
-          expect(scene.add).toHaveBeenCalledWith(contourLines);
-      });
-
-      it.skip('should dispose old contour lines before creating new ones', () => {
-        // SKIPPED: This test fails because the previous contourLines instance is sometimes null or not properly tracked between setWorldMap calls.
-        // The mocks for geometry/material disposal and scene.remove are not always triggered as expected.
-        // To fix: Ensure mocks persist across updates and Visualizer exposes better hooks for test inspection.
-          const mockMap1 = createMockWorldMap(10, 50, (x, y) => x); // First map
-          visualizer.setWorldMap(mockMap1);
-          const oldLines = getContourLines(visualizer);
-          expect(oldLines).not.toBeNull();
-          if (!oldLines) throw new Error('contourLines was null when expected');
-          const oldGeomDisposeSpy = jest.spyOn(oldLines.geometry, 'dispose');
-          const oldMatDisposeSpy = jest.spyOn(oldLines.material as THREE.Material, 'dispose');
-          const scene = getScene(visualizer);
-          const sceneRemoveSpy = jest.spyOn(scene, 'remove');
-
-          // Set a different map to trigger update and recreation
-          const mockMap2 = createMockWorldMap(10, 50, (x, y) => y); // Second map
-          visualizer.setWorldMap(mockMap2);
-          const newLines = getContourLines(visualizer);
-
-          expect(sceneRemoveSpy).toHaveBeenCalledWith(oldLines);
-          expect(oldGeomDisposeSpy).toHaveBeenCalledTimes(1);
-          expect(oldMatDisposeSpy).toHaveBeenCalledTimes(1);
-          expect(newLines).not.toBe(oldLines);
-          expect(scene.add).toHaveBeenCalledWith(newLines);
-      });
-
-      it.skip('should generate vertices with correct positions and offset', () => {
-        // SKIPPED: This test fails because the mock geometry and BufferAttribute do not reliably capture the vertex data as expected.
-        // The test expects to find specific vertex positions, but the mocks may not reflect the actual logic of Visualizer's contour line generation.
-        // To fix: Use real BufferGeometry/BufferAttribute or more detailed mocks that mirror Visualizer's usage.
-          const config = (visualizer as any).config;
-          const maxHeight = config.worldMaxHeight; // e.g., 50
-          const contourOffset = (visualizer as any).contourOffset; // e.g., 2.0
-          // Create a map with a simple slope to easily predict contour crossings
-          const mockMap = createMockWorldMap(config.worldSize, maxHeight, (x, y) => {
-              return (x / config.worldSize) * maxHeight; // Height increases linearly from 0 to maxHeight along X
-          });
-          
-          // Call setWorldMap to trigger contour creation and vertex capture
-          // The mocks should capture the necessary data internally
-          visualizer.setWorldMap(mockMap);
-
-          const contourLines = getContourLines(visualizer);
-          expect(contourLines).not.toBeNull();
-          if (!contourLines) throw new Error('contourLines was null when expected');
-          const mockGeometry = contourLines.geometry as any; // Access the mock geometry stored on LineSegments
-          expect(mockGeometry._mockPositionAttribute).toBeDefined();
-          const positionAttribute = mockGeometry._mockPositionAttribute as THREE.BufferAttribute;
-          const vertices = positionAttribute.array as Float32Array;
-
-          // Expect vertices to be in pairs (lines segments)
-          expect(vertices.length % 6).toBe(0); // 2 vertices per segment, 3 coords per vertex
-
-          // Check a sample segment's Y coordinate (should be height + offset)
-          // Find a segment - based on the height func, crossings occur at specific x values
-          // e.g., for level = maxHeight / 2, crossing is at x = worldSize / 2
-          const expectedHeightAtMidLevel = maxHeight / 2;
-          let foundSegment = false;
-          for (let i = 0; i < vertices.length; i += 6) {
-              const y1 = vertices[i + 1];
-              const y2 = vertices[i + 4];
-              // Look for vertices near the expected height + offset
-              if (Math.abs(y1 - (expectedHeightAtMidLevel + contourOffset)) < 0.1 &&
-                  Math.abs(y2 - (expectedHeightAtMidLevel + contourOffset)) < 0.1) {
-                  foundSegment = true;
-                  break;
-              }
-          }
-          expect(foundSegment).toBe(true); // Verify we found a segment near the mid-height level
-      });
-
-  });
-
+  // Removed contour line generation test - feature no longer supported
 });

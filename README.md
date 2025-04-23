@@ -108,13 +108,12 @@ State: Each region stores its boundaries, average height, carrying capacity, and
 Canvas: Render within a browser canvas, ideally matching Config.WorldSize in pixels (e.g., 1200x1200).
 Terrain: Render the world surface.
 Color: Use contour shading based on height z. Colors should span the height range (0 to WorldMaxHeight) and have opacity < 100% (e.g., 70-80%) for a non-bold look.
-Lines: Draw contour lines at intervals defined by Config.ContourLineInterval (Initial: 100 units of height).
 Regions: Draw outlines for each region boundary. Display the region's CarryingCapacity as text within or near the region.
 Organisms: Represent each organism by a 3x3 pixel square centered at its (x, y) position. Color can be uniform (e.g., black or white) or potentially encode state (optional).
 Flags:
 Mark the highest sampled point in the entire world with a small red flag/marker.
 UI Overlays: Display the current Round Number and Total Population count, typically in a corner (e.g., top-left).
-Allowing the setting of all configuration parameters (WorldSize, WorldMaxHeight, StartingOrganisms, MaxLifeSpan, DeliberateMutationProbability, RegionCount, ContourLineInterval) and the random seed (Initial: 9969) via a configuration panel at startup.
+Allowing the setting of all configuration parameters (WorldSize, WorldMaxHeight, StartingOrganisms, MaxLifeSpan, DeliberateMutationProbability, RegionCount) and the random seed (Initial: 9969) via a configuration panel at startup.
 8. Configuration (Config Class/Object)
 
 Consolidate all simulation parameters:
@@ -126,7 +125,6 @@ StartingOrganisms (Initial: 5000)
 MaxLifeSpan (Initial: 10)
 DeliberateMutationProbability (Initial: 0.2)
 RegionCount (Initial: 900)
-ContourLineInterval (Initial: 100)
 (Internal/Derived): RegionSize, Gaussian parameters for height map, etc.
 9. Methodology & Testing
 
