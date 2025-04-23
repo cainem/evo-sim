@@ -53,6 +53,10 @@ Select the top min(q, n_eligible) organisms for reproduction.
 Each selected organism creates one offspring.
 Death (b): Remove organisms that have been marked for death.
 Update Counters: Update overall round and population counters.
+
+Simulation Stop Condition:
+- The simulation ends immediately when any organism first enters the region containing the highest point of the map (the flagged high point). No further rounds are executed after this event. The simulation should record or display which organism reached the region, the region identity, and in which round.
+
 5. Reproduction Mechanics
 
 Reproduction rules vary by organism type:

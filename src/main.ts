@@ -81,9 +81,7 @@ function startSimulationWithConfig(config: Config) {
 
     // Create a seeded random number generator
     const random = new SeededRandom(config.randomSeed);
-    // Create the world map
     const worldMap = new WorldMap(config, random);
-    // Create region manager and calculate regions
     const regionManager = new RegionManager(config, worldMap);
     regionManager.calculateRegions();
     const regions = regionManager.getRegions();
@@ -94,9 +92,28 @@ function startSimulationWithConfig(config: Config) {
             console.log(`Region ${index}:`, region.getBounds(), region.getStatistics());
         });
     }
-    // Create simulation with regions
     const simulation = new Simulation(config, worldMap, random, regions);
     simulation.initialize();
+
+    // Find the region containing the world's highest point
+    let worldHighestPoint = { x: 0, y: 0, height: 0 };
+    let highPointRegion: Region | null = null;
+    {
+        const allRegionStats = regions.map(r => r.getStatistics());
+        worldHighestPoint = allRegionStats.reduce((highest, stat) => {
+            if (stat.highestPoint && stat.highestPoint.height > highest.height) {
+                return stat.highestPoint;
+            }
+            return highest;
+        }, { x: 0, y: 0, height: 0 });
+        highPointRegion = regions.find(r => r.containsPoint(worldHighestPoint.x, worldHighestPoint.y)) || null;
+    }
+    // Store for later use
+    (window as any).__highPointRegion = highPointRegion;
+    (window as any).__worldHighestPoint = worldHighestPoint;
+    (window as any).__simulation = simulation;
+    (window as any).__regions = regions;
+    (window as any).__roundStopped = false;
 
     if (DEBUG) {
         const organisms = simulation.getOrganisms();
@@ -107,6 +124,7 @@ function startSimulationWithConfig(config: Config) {
             }
         });
     }
+
     try {
         // Dispose previous visualizer if exists
         if (currentVisualizer) {
@@ -119,7 +137,9 @@ function startSimulationWithConfig(config: Config) {
         if (DEBUG) {
             console.log('CSS2DRenderer initialized:', currentVisualizer);
         }
-        let worldHighestPoint = { x: 0, y: 0, height: 0 };
+        currentVisualizer.drawRegions(regions);
+        currentVisualizer.drawOrganisms(simulation.getOrganisms());
+        currentVisualizer.drawFlags(worldHighestPoint);
         try {
             currentVisualizer.drawRegions(regions);
             currentVisualizer.drawOrganisms(simulation.getOrganisms());
@@ -194,6 +214,7 @@ function setupSimulationControls(
 
     // Create start/stop button
     const toggleButton = document.createElement('button');
+    toggleButton.id = 'toggleSimBtn';
     toggleButton.textContent = 'Start Simulation';
     toggleButton.style.marginRight = '10px';
     toggleButton.style.padding = '5px 10px';
@@ -201,12 +222,14 @@ function setupSimulationControls(
 
     // Create step button
     const stepButton = document.createElement('button');
+    stepButton.id = 'stepSimBtn';
     stepButton.textContent = 'Run 1 Round';
     stepButton.style.padding = '5px 10px';
     stepButton.style.cursor = 'pointer';
 
     // Create reset button
     const resetButton = document.createElement('button');
+    resetButton.id = 'resetSimBtn';
     resetButton.textContent = 'Reset';
     resetButton.style.marginLeft = '10px';
     resetButton.style.padding = '5px 10px';
@@ -236,6 +259,14 @@ function setupSimulationControls(
             simulationInterval = window.setInterval(() => {
                 runSimulationRound(simulation, visualizer);
             }, roundDelay);
+            (window as any).__stopSimulationInterval = () => {
+                if (simulationInterval !== null) {
+                    clearInterval(simulationInterval);
+                    simulationInterval = null;
+                }
+                isSimulationRunning = false;
+            };
+
         } else {
             toggleButton.textContent = 'Start Simulation';
             stepButton.disabled = false;
@@ -256,6 +287,10 @@ function setupSimulationControls(
 
     // Reset button click event
     resetButton.addEventListener('click', () => {
+        // Remove simulation end overlay if present
+        const overlay = document.getElementById('simEndOverlay');
+        if (overlay) overlay.remove();
+
         // Dispose current visualizer and remove controls
         if (currentVisualizer) {
             currentVisualizer.dispose();
@@ -294,9 +329,55 @@ function setupSimulationControls(
  * @param simulation The simulation instance
  * @param visualizer The visualizer instance
  */
-function runSimulationRound(simulation: Simulation, visualizer: Visualizer): void {
+export function runSimulationRound(simulation: Simulation, visualizer: Visualizer): void {
+    // Stop if already ended
+    if ((window as any).__roundStopped) return;
     // Run a simulation round
     const roundStats = simulation.runRound();
+
+    // Check simulation stop condition (organism enters high-point region)
+    const regions = (window as any).__regions as Region[];
+    const highPointRegion = (window as any).__highPointRegion as Region | null;
+    if (highPointRegion) {
+        const organisms = simulation.getOrganisms();
+        const found = organisms.find(org => highPointRegion!.containsPoint(org.getPosition().x, org.getPosition().y));
+        if (found) {
+            (window as any).__roundStopped = true;
+            // Display result
+            const round = simulation.getRoundNumber();
+            const pos = found.getPosition();
+            const regionIdx = regions.findIndex(r => r === highPointRegion);
+            // Use a simple overlay
+            let overlay = document.getElementById('simEndOverlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'simEndOverlay';
+                overlay.style.position = 'fixed';
+                overlay.style.top = '50%';
+                overlay.style.left = '50%';
+                overlay.style.transform = 'translate(-50%, -50%)';
+                overlay.style.background = 'rgba(255,255,255,0.95)';
+                overlay.style.padding = '32px 48px';
+                overlay.style.borderRadius = '12px';
+                overlay.style.fontSize = '1.15rem';
+                overlay.style.boxShadow = '0 2px 12px rgba(0,0,0,0.25)';
+                overlay.style.zIndex = '99999';
+                document.body.appendChild(overlay);
+            }
+            overlay.innerHTML = `<b>Simulation Ended</b><br>
+                Organism at (${pos.x}, ${pos.y}) entered region #${regionIdx} containing the world's highest point (${highPointRegion.getStatistics().highestPoint.x}, ${highPointRegion.getStatistics().highestPoint.y}, height=${highPointRegion.getStatistics().highestPoint.height})<br>
+                Round: ${round}`;
+            // Stop simulation interval if running
+            if ((window as any).__stopSimulationInterval) (window as any).__stopSimulationInterval();
+            const toggleBtn = document.getElementById('toggleSimBtn') as HTMLButtonElement;
+            if (toggleBtn) toggleBtn.textContent = 'Start Simulation';
+            const stepBtn = document.getElementById('stepSimBtn') as HTMLButtonElement;
+            if (stepBtn) stepBtn.disabled = false;
+            const resetBtn = document.getElementById('resetSimBtn') as HTMLButtonElement;
+            if (resetBtn) resetBtn.disabled = false;
+            return;
+        }
+    }
 
     if (DEBUG) {
         console.log(`Round ${simulation.getRoundNumber()} stats:`, {

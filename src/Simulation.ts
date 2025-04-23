@@ -281,4 +281,16 @@ export class Simulation {
     const value = this.random.nextInt(0, 2); // 0, 1, or 2
     return (value - 1) as -1 | 0 | 1; // Convert to -1, 0, or 1
   }
+
+  /**
+   * Finds the first organism in the specified region.
+   * @param region The region to check.
+   * @returns The first organism in the region or null if none.
+   */
+  public findFirstOrganismInRegion(region: Region): BaseOrganism | null {
+    return this.organisms.find(org => {
+      const pos = org.getPosition();
+      return region.containsPoint(pos.x, pos.y);
+    }) || null;
+  }
 }
