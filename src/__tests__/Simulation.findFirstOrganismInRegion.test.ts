@@ -17,7 +17,13 @@ class DummyOrganism extends BaseOrganism {
     super.age();
   }
 
-  public reproduce(config: Config, random: SeededRandom, worldMap: WorldMap): BaseOrganism {
+  public reproduce(
+    parents: BaseOrganism[],
+    index: number,
+    config: Config,
+    random: SeededRandom,
+    worldMap?: WorldMap
+  ): BaseOrganism {
     // stub implementation
     return this;
   }

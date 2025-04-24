@@ -65,9 +65,11 @@ export class OrganismA extends BaseOrganism {
    * Creates a new offspring from this organism
    */
   public reproduce(
+    parents: BaseOrganism[],
+    index: number,
     config: Config,
     random: SeededRandom,
-    worldMap: WorldMap
+    worldMap?: WorldMap
   ): OrganismA {
     /* istanbul ignore next */
     const isTestEnvironment = config.isTestEnvironment;
@@ -79,7 +81,7 @@ export class OrganismA extends BaseOrganism {
       // Add bounds checking before calling getHeight
       const worldSize = config.worldSize;
       const isValidPos = this.getPosition().x >= 0 && this.getPosition().x < worldSize && this.getPosition().y >= 0 && this.getPosition().y < worldSize;
-      const height = isValidPos ? worldMap.getHeight(this.getPosition().x, this.getPosition().y) : 'OUT_OF_BOUNDS';
+      const height = isValidPos ? worldMap!.getHeight(this.getPosition().x, this.getPosition().y) : 'OUT_OF_BOUNDS';
       
       console.log('Parent position:', this.getPosition().x, this.getPosition().y, 'Height:', height);
       console.log('Parent mutation values:', {
@@ -135,7 +137,7 @@ export class OrganismA extends BaseOrganism {
     if (!isTestEnvironment) {
       // Add bounds check for the height lookup
       const isValidPos = newX >= 0 && newX < config.worldSize && newY >= 0 && newY < config.worldSize;
-      const height = isValidPos ? worldMap.getHeight(newX, newY) : 'OUT_OF_BOUNDS';
+      const height = isValidPos ? worldMap!.getHeight(newX, newY) : 'OUT_OF_BOUNDS';
       
       console.log('Offspring position:', newX, newY, 'Height:', height);
       console.log('Offspring parameters:', {

@@ -14,7 +14,13 @@ describe('BaseOrganism', () => {
       super(params, config, random);
     }
 
-    public reproduce(config: Config, random: SeededRandom, worldMap: WorldMap): BaseOrganism {
+    public reproduce(
+      parents: BaseOrganism[],
+      index: number,
+      config: Config,
+      random: SeededRandom,
+      worldMap?: WorldMap
+    ): BaseOrganism {
       // stub for abstract method
       return this;
     }

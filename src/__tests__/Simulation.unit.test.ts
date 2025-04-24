@@ -16,7 +16,13 @@ describe('Simulation basic functionality', () => {
       super({ x, y, roundsLived }, Config.createCustomConfig({ worldSize: 10, maxLifeSpan: 5 }));
     }
 
-    public reproduce(config: Config, random: SeededRandom, worldMap: WorldMap): BaseOrganism {
+    public reproduce(
+      parents: BaseOrganism[],
+      index: number,
+      config: Config,
+      random: SeededRandom,
+      worldMap?: WorldMap
+    ): BaseOrganism {
       // stub implementation for abstract method
       return this;
     }

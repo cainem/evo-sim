@@ -47,6 +47,13 @@ export class Simulation {
   }
 
   /**
+   * Initializes simulation with provided organisms for testing.
+   */
+  public initializeWithOrganisms(organisms: BaseOrganism[]): void {
+    this.organisms = [...organisms];
+  }
+
+  /**
    * Runs a single round of the simulation
    * @returns Statistics about the round execution
    */
@@ -108,13 +115,6 @@ export class Simulation {
   public reset(): void {
     this.organisms = [];
     this.roundNumber = 0;
-  }
-
-  /**
-   * Initializes the simulation with specific organisms (for testing)
-   */
-  public initializeWithOrganisms(organisms: BaseOrganism[]): void {
-    this.organisms = [...organisms];
   }
 
   /**
@@ -213,14 +213,19 @@ export class Simulation {
             let offspring;
             if (this.config.organismType === 'A') {
               offspring = (eligibleParents[i] as OrganismA).reproduce(
+                eligibleParents,
+                i,
                 this.config,
                 this.random,
                 this.worldMap
               );
             } else {
               offspring = (eligibleParents[i] as OrganismB).reproduce(
+                eligibleParents,
+                i,
                 this.config,
-                this.random
+                this.random,
+                this.worldMap
               );
             }
             

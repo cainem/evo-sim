@@ -1,6 +1,7 @@
 import { Config } from './Config';
 import { BaseOrganism } from './BaseOrganism';
 import { SeededRandom } from './utils/SeededRandom';
+import { WorldMap } from './WorldMap';
 
 /**
  * Type B organism reproducing with random offset in [-5,5]
@@ -29,7 +30,13 @@ export class OrganismB extends BaseOrganism {
   /**
    * Reproduce with random dx, dy ∈ [-5,5] and wrap around world borders
    */
-  public reproduce(config: Config, random: SeededRandom): OrganismB {
+  public reproduce(
+    parents: BaseOrganism[],
+    index: number,
+    config: Config,
+    random: SeededRandom,
+    worldMap?: WorldMap
+  ): OrganismB {
     const worldSize = config.worldSize;
     const dx = random.nextInt(-5, 5);
     const dy = random.nextInt(-5, 5);

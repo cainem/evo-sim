@@ -83,8 +83,10 @@ export abstract class BaseOrganism {
    * Creates an offspring; must be implemented by subclasses.
    */
   public abstract reproduce(
+    parents: BaseOrganism[],
+    index: number,
     config: Config,
     random: SeededRandom,
-    worldMap: WorldMap
+    worldMap?: WorldMap
   ): BaseOrganism;
 }
