@@ -61,7 +61,7 @@ function readConfigFromUI(): Config | null {
         return null;
     } else {
         errorMessageDiv.style.display = 'none';
-        const organismType = organismTypeInput.value as 'A' | 'B';
+        const organismType = organismTypeInput.value as 'A' | 'B' | 'C';
         // Create config with user inputs - mark as non-test
         return Config.createCustomConfig({ ...values, isTestEnvironment: false, organismType });
     }
