@@ -92,11 +92,29 @@ describe('OrganismC Gene Mutation Logic', () => {
         expect(mutatedGene.sizeOfRelativeMutation).toBe(-25); // Expect clamping at -25
     });
 
-    // --- REFACTORING NEEDED for absolutePosition tests below --- //
-    // TODO: Rewrite these tests to use testMutateGeneInternal and single Gene logic
+    it('should correctly wrap absolutePosition positively', () => {
+        const gene = createTestGene({ absolutePosition: 98, sizeOfRelativeMutation: 3, deliberateMutation: true });
+        // Mocks:
+        nextBooleanSpy.mockReturnValueOnce(false); // Don't flip deliberate flag
+        nextIntSpy.mockReturnValueOnce(0);         // sizeDelta = 0
+        nextBooleanSpy.mockReturnValueOnce(false); // Don't recalc dominance
 
-    it.skip('should correctly wrap absolutePosition positively (SKIPPED - needs refactor)', () => {});
-    it.skip('should correctly wrap absolutePosition negatively (SKIPPED - needs refactor)', () => {});
+        const mutatedGene = testMutateGeneInternal(gene, 50); // regionSize doesn't matter here
+        // Expect (98 + 3 + 100) % 100 = 1
+        expect(mutatedGene.absolutePosition).toBe(1);
+    });
+
+    it('should correctly wrap absolutePosition negatively', () => {
+        const gene = createTestGene({ absolutePosition: 1, sizeOfRelativeMutation: -3, deliberateMutation: true });
+        // Mocks:
+        nextBooleanSpy.mockReturnValueOnce(false); // Don't flip deliberate flag
+        nextIntSpy.mockReturnValueOnce(0);         // sizeDelta = 0
+        nextBooleanSpy.mockReturnValueOnce(false); // Don't recalc dominance
+
+        const mutatedGene = testMutateGeneInternal(gene, 50); // regionSize doesn't matter here
+        // Expect (1 + (-3) + 100) % 100 = 98
+        expect(mutatedGene.absolutePosition).toBe(98);
+    });
 
     it('should recalculate dominanceFactor based on probability', () => {
         const gene = createTestGene({ dominanceFactor: 7777, sizeOfRelativeMutation: 1, deliberateMutation: true }); // Need size != 0 and deliberate=true
