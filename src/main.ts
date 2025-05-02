@@ -7,7 +7,7 @@ import { Simulation } from './Simulation';
 import { Region } from './Region';
 
 // Debug flag to enable verbose logging
-const DEBUG = true;
+const DEBUG = false;
 
 // Simulation control
 let isSimulationRunning = false;

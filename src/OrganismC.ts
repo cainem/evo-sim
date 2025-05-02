@@ -38,14 +38,25 @@ export class OrganismC extends BaseOrganism {
         super(params, config, random);
         const effectiveRandom = random ?? new SeededRandom(config.randomSeed); 
 
-        this.geneSet1 = initialGeneSet1 || {
-            geneX: createInitialGene(effectiveRandom), 
-            geneY: createInitialGene(effectiveRandom),
-        };
-        this.geneSet2 = initialGeneSet2 || {
-            geneX: createInitialGene(effectiveRandom),
-            geneY: createInitialGene(effectiveRandom),
-        };
+        // Use provided gene sets or create defaults anchored at parent position
+        if (initialGeneSet1 && initialGeneSet2) {
+            this.geneSet1 = initialGeneSet1;
+            this.geneSet2 = initialGeneSet2;
+        } else {
+            this.geneSet1 = {
+                geneX: createInitialGene(effectiveRandom),
+                geneY: createInitialGene(effectiveRandom),
+            };
+            this.geneSet2 = {
+                geneX: createInitialGene(effectiveRandom),
+                geneY: createInitialGene(effectiveRandom),
+            };
+            // Anchor genes to parent coordinates
+            this.geneSet1.geneX.absolutePosition = params.x;
+            this.geneSet1.geneY.absolutePosition = params.y;
+            this.geneSet2.geneX.absolutePosition = params.x;
+            this.geneSet2.geneY.absolutePosition = params.y;
+        }
     }
 
     public reproduce(
