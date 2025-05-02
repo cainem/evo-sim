@@ -29,7 +29,7 @@ export abstract class BaseOrganism {
       if (!random) {
         throw new Error('SeededRandom instance required for initial organisms');
       }
-      this.roundsLived = random.nextInt(0, Math.floor(config.maxLifeSpan / 2));
+      this.roundsLived = random.nextInt(0, config.maxLifeSpan - 1);
     }
   }
 

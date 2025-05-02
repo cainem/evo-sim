@@ -48,7 +48,7 @@ describe('BaseOrganism', () => {
       const org = new TestOrganism({ x: 1.8, y: 2.9 }, config, mockRandom);
       expect(mockRandom.nextInt).toHaveBeenCalledWith(
         0,
-        Math.floor(config.maxLifeSpan / 2)
+        config.maxLifeSpan - 1
       );
       expect(org.getRoundsLived()).toBe(3);
     });

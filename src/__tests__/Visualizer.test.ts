@@ -37,7 +37,6 @@ jest.mock('three', () => {
     __mocks: { geometryMocks },
     BufferGeometry: jest.fn(function(this: any) {
       bufferGeometryCount++;
-      console.log(`[MOCK] BufferGeometry created #${bufferGeometryCount}`);
       // Create a stubbed BufferAttribute for position
       const positionArray = new Float32Array(6);
       const positionAttribute = new originalThree.BufferAttribute(positionArray, 3);
@@ -69,7 +68,6 @@ jest.mock('three', () => {
       ws = Math.min(ws, 10);
       hs = Math.min(hs, 10);
       planeGeometryCount++;
-      console.log(`[MOCK] PlaneGeometry created #${planeGeometryCount} (w=${w}, h=${h}, ws=${ws}, hs=${hs})`);
       // Calculate initial vertex positions for the plane
       const vertexCount = (ws + 1) * (hs + 1);
       const vertices = new Float32Array(vertexCount * 3);

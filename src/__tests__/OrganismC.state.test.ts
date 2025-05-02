@@ -54,12 +54,12 @@ describe('OrganismC Constructor and Initial State', () => {
         // Uses randomInstance from beforeEach
         const organism = new OrganismC(pos, currentMockConfig, randomInstance); 
         expect(organism.getPosition()).toEqual(pos);
-        // Expect roundsLived to be initialized randomly between 0 and floor(maxLifeSpan/2)
+        // Expect roundsLived to be initialized randomly between 0 and maxLifeSpan - 1
         const roundsLived = organism.getRoundsLived();
         expect(roundsLived).toBeGreaterThanOrEqual(0);
-        expect(roundsLived).toBeLessThanOrEqual(5); // Because mock maxLifeSpan is 10
+        expect(roundsLived).toBeLessThanOrEqual(9); // Because mock maxLifeSpan is 10
         // Verify the random number generator was called correctly by the constructor
-        expect(nextIntSpy).toHaveBeenCalledWith(0, 5);
+        expect(nextIntSpy).toHaveBeenCalledWith(0, 9);
     });
 
     it('should initialize with specific gene sets if provided', () => {

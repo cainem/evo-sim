@@ -129,8 +129,6 @@ export class Visualizer {
    * @param worldMap The WorldMap instance containing height data
    */
   public setWorldMap(worldMap: WorldMap): void {
-    console.log('[Visualizer] setWorldMap called', { worldMap });
-    console.log('Setting WorldMap in Visualizer');
     this.worldMap = worldMap;
     
     // Re-enable actual terrain visualization
@@ -142,7 +140,6 @@ export class Visualizer {
    * Creates a simple debug pattern on the plane to verify visualization is working
    */
   private createDebugPattern(): void {
-    console.log('Creating debug pattern');
     
     // Early exit if planeMesh is not initialized
     if (!this.planeMesh) {
@@ -185,15 +182,12 @@ export class Visualizer {
     // Update the geometry
     geometry.attributes.position.needsUpdate = true;
     geometry.computeVertexNormals();
-    
-    console.log('Debug pattern created');
   }
 
   /**
    * Updates the terrain visualization based on the height map data
    */
   private updateTerrainVisualization(): void {
-    console.log('[Visualizer] updateTerrainVisualization called');
     // Early exit if planeMesh is not initialized
     if (!this.planeMesh) {
       console.error('Cannot update terrain: planeMesh is not initialized.');
@@ -209,9 +203,8 @@ export class Visualizer {
     const maxHeight = this.config.worldMaxHeight;
     const geometry = mesh.geometry as THREE.PlaneGeometry;
     const positionAttribute = geometry.getAttribute('position');
-    console.log('[Visualizer] Geometry/attributes accessed', { worldSize, maxHeight, vertexCount: positionAttribute.count });
     const colors = new Float32Array(positionAttribute.count * 3);
-    console.log('[Visualizer] Buffer allocated', { bufferLength: colors.length });
+    
     // Enter per-vertex loop, but only log index and coords for first vertex
     for (let i = 0; i < positionAttribute.count; i++) {
       const vertexX = positionAttribute.getX(i);
@@ -244,13 +237,9 @@ export class Visualizer {
       }
     }
     geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-    console.log('[Visualizer] geometry.setAttribute for color completed');
     geometry.attributes.color.needsUpdate = true;
     geometry.attributes.position.needsUpdate = true;
-    console.log('[Visualizer] needsUpdate set for color and position');
     geometry.computeVertexNormals();
-    console.log('[Visualizer] computeVertexNormals completed');
-    // Stop of terrain update
   }
 
   private onWindowResize(): void {
@@ -368,9 +357,6 @@ export class Visualizer {
    * @param regions Array of regions to visualize
    */
   public drawRegions(regions: Region[]): void {
-    console.log('[Visualizer] drawRegions called', { regionCount: regions.length });
-    console.log(`Drawing ${regions.length} region boundaries`);
-    
     // Remove existing region boundaries if they exist
     if (this.regionBoundaries) {
       this.scene.remove(this.regionBoundaries);
@@ -479,9 +465,6 @@ export class Visualizer {
    * @param organisms Array of organisms to visualize
    */
   public drawOrganisms(organisms: BaseOrganism[]): void {
-    console.log('[Visualizer] drawOrganisms called', { organismCount: organisms.length });
-    console.log(`Drawing ${organisms.length} organisms`);
-    
     // Remove existing organism instances if they exist
     if (this.organismInstances) {
       this.scene.remove(this.organismInstances);
@@ -561,8 +544,6 @@ export class Visualizer {
    * @param worldHighestSampledPoint The highest point in the entire world
    */
   public drawFlags(worldHighestSampledPoint: { x: number, y: number, height: number }): void {
-    console.log('Drawing flags for highest points');
-    
     // Remove existing world highest flag if it exists
     if (this.worldHighestFlag) {
       this.scene.remove(this.worldHighestFlag);
@@ -649,8 +630,6 @@ export class Visualizer {
  
   // Cleanup function
   public dispose(): void {
-    console.log('[Visualizer] dispose called');
-    console.log("Disposing Visualizer resources");
     // Stop the render loop
     this.stopRenderLoop();
 
@@ -768,8 +747,6 @@ export class Visualizer {
     if (this.renderer) {
       this.renderer.dispose();
     }
-    
-    console.log("Visualizer disposed");
   }
 
 }
