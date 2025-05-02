@@ -12,7 +12,8 @@ describe('OrganismB reproduction', () => {
   it('applies positive random offset without wrap-around', () => {
     const randomStub = { nextInt: jest.fn().mockReturnValue(3) };
     const parent = new OrganismB({ x: 2, y: 4, roundsLived: 0 }, config);
-    const child = parent.reproduce([parent], 0, config, randomStub as any);
+    const children = parent.reproduce([parent], 0, config, randomStub as any);
+    const child = children[0]; // Access first offspring
     expect(child).toBeInstanceOf(OrganismB);
     expect(child.getPosition()).toEqual({ x: 5, y: 7 });
     expect(child.getRoundsLived()).toBe(0);
@@ -21,7 +22,8 @@ describe('OrganismB reproduction', () => {
   it('applies negative random offset with wrap-around', () => {
     const randomStub = { nextInt: jest.fn().mockReturnValue(-5) };
     const parent = new OrganismB({ x: 1, y: 0, roundsLived: 0 }, config);
-    const child = parent.reproduce([parent], 0, config, randomStub as any);
+    const children = parent.reproduce([parent], 0, config, randomStub as any);
+    const child = children[0]; // Access first offspring
     expect(child.getPosition()).toEqual({ x: (1 - 5 + 10) % 10, y: (0 - 5 + 10) % 10 });
   });
 
@@ -29,7 +31,8 @@ describe('OrganismB reproduction', () => {
     const random = new SeededRandom(12345);
     const parent = new OrganismB({ x: 5, y: 5, roundsLived: 0 }, config);
     for (let i = 0; i < 20; i++) {
-      const child = parent.reproduce([parent], 0, config, random);
+      const children = parent.reproduce([parent], 0, config, random);
+      const child = children[0]; // Access first offspring
       const { x, y } = child.getPosition();
       const dxRaw = x - 5;
       const dyRaw = y - 5;

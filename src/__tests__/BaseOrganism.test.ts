@@ -20,9 +20,9 @@ describe('BaseOrganism', () => {
       config: Config,
       random: SeededRandom,
       worldMap?: WorldMap
-    ): BaseOrganism {
+    ): BaseOrganism[] { 
       // stub for abstract method
-      return this;
+      return [this]; 
     }
   }
 

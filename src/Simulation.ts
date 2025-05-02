@@ -3,6 +3,7 @@ import { WorldMap } from './WorldMap';
 import { SeededRandom } from './utils/SeededRandom';
 import { OrganismA } from './OrganismA';
 import { OrganismB } from './OrganismB';
+import { OrganismC } from './OrganismC'; // Import OrganismC
 import { OrganismParameters } from './types/OrganismParameters';
 import { Region } from './Region';
 import { BaseOrganism } from './BaseOrganism';
@@ -40,8 +41,10 @@ export class Simulation {
           offspringsYDistance: 0
         };
         this.organisms.push(new OrganismA(params, this.config, this.random));
-      } else {
+      } else if (this.config.organismType === 'B') { // Handle OrganismB
         this.organisms.push(new OrganismB({ x: centerX, y: centerY }, this.config, this.random));
+      } else { // Handle OrganismC (must be 'C' if not 'A' or 'B')
+        this.organisms.push(new OrganismC({ x: centerX, y: centerY }, this.config, this.random));
       }
     }
   }
@@ -210,34 +213,47 @@ export class Simulation {
             console.log(`Selected ${numParents} parents for reproduction`);
           }
           for (let i = 0; i < numParents; i++) {
-            let offspring;
-            if (this.config.organismType === 'A') {
-              offspring = (eligibleParents[i] as OrganismA).reproduce(
+            let offspringList: BaseOrganism[] = []; // Initialize offspringList
+
+            if (eligibleParents[i] instanceof OrganismA) {
+              // OrganismA reproduction
+              offspringList = (eligibleParents[i] as OrganismA).reproduce(
                 eligibleParents,
                 i,
                 this.config,
                 this.random,
                 this.worldMap
               );
-            } else {
-              offspring = (eligibleParents[i] as OrganismB).reproduce(
+            } else if (eligibleParents[i] instanceof OrganismB) { // Handle OrganismB
+              offspringList = (eligibleParents[i] as OrganismB).reproduce(
                 eligibleParents,
                 i,
                 this.config,
                 this.random,
                 this.worldMap
+              );
+            } else { // Handle OrganismC (must be 'C' if not 'A' or 'B')
+              offspringList = (eligibleParents[i] as OrganismC).reproduce(
+                eligibleParents,
+                i,
+                this.config,
+                this.random
               );
             }
             
-            // Ensure offspring has valid coordinates before adding
-            const pos = offspring.getPosition();
-            if (pos.x >= 0 && pos.x < this.config.worldSize && 
-                pos.y >= 0 && pos.y < this.config.worldSize) {
-              newOffspring.push(offspring);
-            } else {
-              // Skip invalid offspring in tests to prevent errors
-              if (process.env.NODE_ENV !== 'test') {
-                console.error(`Invalid offspring position: (${pos.x}, ${pos.y}), worldSize: ${this.config.worldSize}`);
+            // Iterate through the returned offspring list
+            for (const individualOffspring of offspringList) {
+              // Ensure each offspring has valid coordinates before adding
+              const pos = individualOffspring.getPosition();
+              if (pos.x >= 0 && pos.x < this.config.worldSize && 
+                  pos.y >= 0 && pos.y < this.config.worldSize) {
+                newOffspring.push(individualOffspring);
+              } else {
+                // Skip invalid offspring in tests to prevent errors
+                /* istanbul ignore next */
+                if (process.env.NODE_ENV !== 'test') {
+                  console.error(`Invalid offspring position: (${pos.x}, ${pos.y}), worldSize: ${this.config.worldSize}`);
+                }
               }
             }
           }

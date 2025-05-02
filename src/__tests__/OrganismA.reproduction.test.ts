@@ -34,7 +34,7 @@ describe('Organism Reproduction', () => {
       }, config);
 
       const offspring = parent.reproduce([parent], 0, config, random, worldMap);
-      expect(offspring.getRoundsLived()).toBe(0);
+      expect(offspring[0].getRoundsLived()).toBe(0);
     });
 
     it('should copy parent mutation parameters when no mutation occurs', () => {
@@ -53,7 +53,7 @@ describe('Organism Reproduction', () => {
       }, config);
 
       const offspring = parent.reproduce([parent], 0, config, noMutationRandom, worldMap);
-      const params = offspring.getParameters();
+      const params = offspring[0].getParameters();
       expect(params.deliberateMutationX).toBe(1);
       expect(params.deliberateMutationY).toBe(-1);
       expect(params.offspringsXDistance).toBe(3); // 2 + 1 (mutation)
@@ -82,7 +82,7 @@ describe('Organism Reproduction', () => {
       }, config);
 
       const offspring = parent.reproduce([parent], 0, config, mutationRandom, worldMap);
-      const params = offspring.getParameters();
+      const params = offspring[0].getParameters();
       expect(params.deliberateMutationX).toBe(1);
       expect(params.deliberateMutationY).toBe(-1);
     });
@@ -103,7 +103,7 @@ describe('Organism Reproduction', () => {
       }, config);
 
       const offspring = parent.reproduce([parent], 0, config, mutationRandom, worldMap);
-      const params = offspring.getParameters();
+      const params = offspring[0].getParameters();
       expect(params.deliberateMutationX).toBe(0);
       expect(params.deliberateMutationY).toBe(0);
     });
@@ -124,7 +124,7 @@ describe('Organism Reproduction', () => {
       const noMutationRandom = new SeededRandom(testSeed);
       jest.spyOn(noMutationRandom, 'nextBoolean').mockReturnValue(false);
       const offspring = parent.reproduce([parent], 0, config, noMutationRandom, worldMap);
-      const params = offspring.getParameters();
+      const params = offspring[0].getParameters();
       expect(params.offspringsXDistance).toBe(-5);
     });
     it('should clamp offspringsXDistance to 5 if parent+mutation > 5', () => {
@@ -143,7 +143,7 @@ describe('Organism Reproduction', () => {
         .mockReturnValueOnce(false) // X: no mutation
         .mockReturnValueOnce(false); // Y: no mutation
       const offspring = parent.reproduce([parent], 0, config, mutationRandom, worldMap);
-      const params = offspring.getParameters();
+      const params = offspring[0].getParameters();
       expect(params.offspringsXDistance).toBe(5);
     });
     it('should clamp offspringsYDistance to -5 if parent+mutation < -5', () => {
@@ -159,7 +159,7 @@ describe('Organism Reproduction', () => {
       const noMutationRandom = new SeededRandom(testSeed);
       jest.spyOn(noMutationRandom, 'nextBoolean').mockReturnValue(false);
       const offspring = parent.reproduce([parent], 0, config, noMutationRandom, worldMap);
-      const params = offspring.getParameters();
+      const params = offspring[0].getParameters();
       expect(params.offspringsYDistance).toBe(-5);
     });
     it('should clamp offspringsYDistance to 5 if parent+mutation > 5', () => {
@@ -177,7 +177,7 @@ describe('Organism Reproduction', () => {
         .mockReturnValueOnce(false) // X: no mutation
         .mockReturnValueOnce(false); // Y: no mutation
       const offspring = parent.reproduce([parent], 0, config, mutationRandom, worldMap);
-      const params = offspring.getParameters();
+      const params = offspring[0].getParameters();
       expect(params.offspringsYDistance).toBe(5);
     });
     it('should not clamp if within range', () => {
@@ -193,7 +193,7 @@ describe('Organism Reproduction', () => {
       const noMutationRandom = new SeededRandom(testSeed);
       jest.spyOn(noMutationRandom, 'nextBoolean').mockReturnValue(false);
       const offspring = parent.reproduce([parent], 0, config, noMutationRandom, worldMap);
-      const params = offspring.getParameters();
+      const params = offspring[0].getParameters();
       expect(params.offspringsXDistance).toBe(4);
       expect(params.offspringsYDistance).toBe(-3);
     });
@@ -212,7 +212,7 @@ describe('Organism Reproduction', () => {
       }, config);
 
       const offspring = parent.reproduce([parent], 0, config, random, worldMap);
-      const pos = offspring.getPosition();
+      const pos = offspring[0].getPosition();
       // With deliberateMutation = 0, offspringsDistance should not be applied
       expect(pos.x).toBe(50); // No offset when deliberateMutationX is 0
       expect(pos.y).toBe(50); // No offset when deliberateMutationY is 0
@@ -230,7 +230,7 @@ describe('Organism Reproduction', () => {
       }, config);
 
       const offspring = parent.reproduce([parent], 0, config, random, worldMap);
-      const pos = offspring.getPosition();
+      const pos = offspring[0].getPosition();
       // With deliberateMutation != 0, offspringsDistance should be applied
       expect(pos.x).toBe(60); // 50 + 10 when deliberateMutationX is 1
       expect(pos.y).toBe(40); // 50 - 10 when deliberateMutationY is -1
@@ -248,7 +248,7 @@ describe('Organism Reproduction', () => {
       }, config);
 
       const offspring = parent.reproduce([parent], 0, config, random, worldMap);
-      const pos = offspring.getPosition();
+      const pos = offspring[0].getPosition();
       expect(pos.x).toBe(10); // (90 + 20) % 100
       expect(pos.y).toBe(90); // (10 - 20 + 100) % 100
     });

@@ -70,7 +70,7 @@ export class OrganismA extends BaseOrganism {
     config: Config,
     random: SeededRandom,
     worldMap?: WorldMap
-  ): OrganismA {
+  ): OrganismA[] {
     /* istanbul ignore next */
     const isTestEnvironment = config.isTestEnvironment;
     
@@ -154,15 +154,17 @@ export class OrganismA extends BaseOrganism {
     }
 
     // Create and return the new offspring
-    return new OrganismA({
-      x: newX,
-      y: newY,
-      roundsLived: 0,
-      deliberateMutationX: newDeliberateMutationX,
-      deliberateMutationY: newDeliberateMutationY,
-      offspringsXDistance: cumulativeOffspringXDistance,
-      offspringsYDistance: cumulativeOffspringYDistance
-    }, config);
+    return [
+      new OrganismA({
+        x: newX,
+        y: newY,
+        roundsLived: 0,
+        deliberateMutationX: newDeliberateMutationX,
+        deliberateMutationY: newDeliberateMutationY,
+        offspringsXDistance: cumulativeOffspringXDistance,
+        offspringsYDistance: cumulativeOffspringYDistance
+      }, config)
+    ];
   }
 
   /**

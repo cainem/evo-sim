@@ -3,6 +3,11 @@ import { Config } from './Config';
 import { WorldMap } from './WorldMap';
 
 /**
+ * Type representing a position in the world.
+ */
+export type Position = { x: number; y: number };
+
+/**
  * Base class encapsulating common organism behaviors: aging, dying, and positioning.
  */
 export abstract class BaseOrganism {
@@ -52,7 +57,7 @@ export abstract class BaseOrganism {
   }
 
   /** Current position in the world */
-  public getPosition(): { x: number; y: number } {
+  public getPosition(): Position {
     return { x: this.x, y: this.y };
   }
 
@@ -88,5 +93,5 @@ export abstract class BaseOrganism {
     config: Config,
     random: SeededRandom,
     worldMap?: WorldMap
-  ): BaseOrganism;
+  ): BaseOrganism[];
 }

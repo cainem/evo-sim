@@ -22,9 +22,9 @@ describe('Simulation basic functionality', () => {
       config: Config,
       random: SeededRandom,
       worldMap?: WorldMap
-    ): BaseOrganism {
+    ): BaseOrganism[] {
       // stub implementation for abstract method
-      return this;
+      return [this];
     }
   }
 

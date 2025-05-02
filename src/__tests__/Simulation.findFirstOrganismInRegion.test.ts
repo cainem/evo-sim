@@ -23,9 +23,9 @@ class DummyOrganism extends BaseOrganism {
     config: Config,
     random: SeededRandom,
     worldMap?: WorldMap
-  ): BaseOrganism {
-    // stub implementation
-    return this;
+  ): BaseOrganism[] {
+    // stub implementation for abstract method
+    return [this];
   }
 }
 

@@ -36,12 +36,13 @@ export class OrganismB extends BaseOrganism {
     config: Config,
     random: SeededRandom,
     worldMap?: WorldMap
-  ): OrganismB {
+  ): OrganismB[] {
     const worldSize = config.worldSize;
     const dx = random.nextInt(-5, 5);
     const dy = random.nextInt(-5, 5);
     const newX = (this.getPosition().x + dx + worldSize) % worldSize;
     const newY = (this.getPosition().y + dy + worldSize) % worldSize;
-    return new OrganismB({ x: newX, y: newY, roundsLived: 0 }, config);
+    const offspring = new OrganismB({ x: newX, y: newY, roundsLived: 0 }, config);
+    return [offspring];
   }
 }
