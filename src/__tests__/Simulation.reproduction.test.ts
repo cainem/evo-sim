@@ -238,4 +238,92 @@ describe('Simulation Reproduction', () => {
       expect(selectedCounts.size).toBeGreaterThan(1);
     });
   });
+
+  describe('Simulation reproduction edge cases', () => {
+    it('should produce births when organisms age to eligible', () => {
+      const config = Config.createCustomConfig({ worldSize: 10, startingOrganisms: 0, maxLifeSpan: 5, regionCount: 1, randomSeed: testSeed });
+      const random = new SeededRandom(testSeed);
+      const worldMap = new WorldMap(config, random);
+      worldMap.generateHeightMap();
+      const region = new Region({ startX: 0, endX: 10, startY: 0, endY: 10 });
+      region.updateStatistics({ averageHeight: 1, carryingCapacity: 5, highestPoint: { x: 0, y: 0, height: 1 } });
+      const simulation = new Simulation(config, worldMap, random, [region]);
+      const organisms: OrganismA[] = [];
+      for (let i = 0; i < 3; i++) {
+        organisms.push(new OrganismA({ x: 5, y: 5, roundsLived: 0, deliberateMutationX: 0, deliberateMutationY: 0, offspringsXDistance: 1, offspringsYDistance: 1 }, config));
+      }
+      simulation.initializeWithOrganisms(organisms);
+      const result = simulation.runRound();
+      expect(result.births).toBe(5 - 3);
+    });
+
+    it('should limit births to eligible parent count when capacity exceeds total organisms', () => {
+      const config = Config.createCustomConfig({ worldSize: 10, startingOrganisms: 0, maxLifeSpan: 5, regionCount: 1, randomSeed: testSeed });
+      const random = new SeededRandom(testSeed);
+      const worldMap = new WorldMap(config, random);
+      worldMap.generateHeightMap();
+      const region = new Region({ startX: 0, endX: 10, startY: 0, endY: 10 });
+      const capacity = 4;
+      region.updateStatistics({ averageHeight: 1, carryingCapacity: capacity, highestPoint: { x: 0, y: 0, height: 1 } });
+      const simulation = new Simulation(config, worldMap, random, [region]);
+      const organisms: OrganismA[] = [];
+      for (let i = 0; i < 2; i++) {
+        organisms.push(new OrganismA({ x: 5, y: 5, roundsLived: 2, deliberateMutationX: 0, deliberateMutationY: 0, offspringsXDistance: 1, offspringsYDistance: 1 }, config));
+      }
+      simulation.initializeWithOrganisms(organisms);
+      const result = simulation.runRound();
+      expect(result.births).toBe(2);
+    });
+
+    it('should skip reproduction when total organisms >= capacity', () => {
+      // capacity = 1, total organisms = 2 => no reproduction
+      const config = Config.createCustomConfig({ worldSize: 10, startingOrganisms: 0, maxLifeSpan: 5, regionCount: 1, randomSeed: testSeed });
+      const random = new SeededRandom(testSeed);
+      const worldMap = new WorldMap(config, random);
+      worldMap.generateHeightMap();
+      const region = new Region({ startX: 0, endX: 10, startY: 0, endY: 10 });
+      region.updateStatistics({ averageHeight: 1, carryingCapacity: 1, highestPoint: { x: 0, y: 0, height: 1 } });
+      const simulation = new Simulation(config, worldMap, random, [region]);
+      const organisms: OrganismA[] = [
+        new OrganismA({ x:5, y:5, roundsLived:2, deliberateMutationX:0, deliberateMutationY:0, offspringsXDistance:1, offspringsYDistance:1 }, config),
+        new OrganismA({ x:5, y:5, roundsLived:2, deliberateMutationX:0, deliberateMutationY:0, offspringsXDistance:1, offspringsYDistance:1 }, config)
+      ];
+      simulation.initializeWithOrganisms(organisms);
+      const result = simulation.runRound();
+      expect(result.births).toBe(0);
+    });
+
+    it('should skip reproduction when no organisms in region', () => {
+      // empty region => no reproduction
+      const config = Config.createCustomConfig({ worldSize: 10, startingOrganisms: 0, maxLifeSpan: 5, regionCount: 1, randomSeed: testSeed });
+      const random = new SeededRandom(testSeed);
+      const worldMap = new WorldMap(config, random);
+      worldMap.generateHeightMap();
+      const region = new Region({ startX: 0, endX: 10, startY: 0, endY: 10 });
+      region.updateStatistics({ averageHeight: 1, carryingCapacity: 5, highestPoint: { x: 0, y: 0, height: 1 } });
+      const simulation = new Simulation(config, worldMap, random, [region]);
+      simulation.initializeWithOrganisms([]);
+      const result = simulation.runRound();
+      expect(result.births).toBe(0);
+    });
+
+    it('should use marked-for-death parents for reproduction', () => {
+      const config = Config.createCustomConfig({ worldSize: 10, startingOrganisms: 0, maxLifeSpan: 5, regionCount: 1, randomSeed: testSeed });
+      const random = new SeededRandom(testSeed);
+      const worldMap = new WorldMap(config, random);
+      worldMap.generateHeightMap();
+      const region = new Region({ startX: 0, endX: 10, startY: 0, endY: 10 });
+      const capacity = 2;
+      region.updateStatistics({ averageHeight: 1, carryingCapacity: capacity, highestPoint: { x: 0, y: 0, height: 1 } });
+      const simulation = new Simulation(config, worldMap, random, [region]);
+      const organisms: OrganismA[] = [
+        new OrganismA({ x: 5, y: 5, roundsLived: 4, deliberateMutationX: 0, deliberateMutationY: 0, offspringsXDistance: 1, offspringsYDistance: 1 }, config),
+        new OrganismA({ x: 5, y: 5, roundsLived: 1, deliberateMutationX: 0, deliberateMutationY: 0, offspringsXDistance: 1, offspringsYDistance: 1 }, config)
+      ];
+      simulation.initializeWithOrganisms(organisms);
+      const result = simulation.runRound();
+      expect(result.births).toBe(1);
+      expect(simulation.getOrganisms().length).toBe(2);
+    });
+  });
 });

@@ -18,18 +18,6 @@ export type GeneSet = {
     geneY: Gene;
 }
 
-function createInitialGene(random: SeededRandom): Gene {
-    const config = Config.getInstance();
-    const regionSize = config.worldSize / Math.sqrt(config.regionCount);
-    const maxRelativeMutation = Math.floor(regionSize / 2);
-    return {
-        deliberateMutation: random.nextBoolean(0.5), 
-        sizeOfRelativeMutation: random.nextInt(-maxRelativeMutation, maxRelativeMutation), 
-        absolutePosition: random.nextInt(0, config.worldSize - 1), 
-        dominanceFactor: random.nextInt(0, 10000), 
-    };
-}
-
 export class OrganismC extends BaseOrganism {
     geneSet1: GeneSet;
     geneSet2: GeneSet;
@@ -43,19 +31,35 @@ export class OrganismC extends BaseOrganism {
             this.geneSet1 = initialGeneSet1;
             this.geneSet2 = initialGeneSet2;
         } else {
+            const center = Math.floor(config.worldSize / 2);
             this.geneSet1 = {
-                geneX: createInitialGene(effectiveRandom),
-                geneY: createInitialGene(effectiveRandom),
+                geneX: {
+                    deliberateMutation: false,
+                    sizeOfRelativeMutation: 0,
+                    absolutePosition: center,
+                    dominanceFactor: effectiveRandom.nextInt(0, 10000),
+                },
+                geneY: {
+                    deliberateMutation: false,
+                    sizeOfRelativeMutation: 0,
+                    absolutePosition: center,
+                    dominanceFactor: effectiveRandom.nextInt(0, 10000),
+                },
             };
             this.geneSet2 = {
-                geneX: createInitialGene(effectiveRandom),
-                geneY: createInitialGene(effectiveRandom),
+                geneX: {
+                    deliberateMutation: false,
+                    sizeOfRelativeMutation: 0,
+                    absolutePosition: center,
+                    dominanceFactor: effectiveRandom.nextInt(0, 10000),
+                },
+                geneY: {
+                    deliberateMutation: false,
+                    sizeOfRelativeMutation: 0,
+                    absolutePosition: center,
+                    dominanceFactor: effectiveRandom.nextInt(0, 10000),
+                },
             };
-            // Anchor genes to parent coordinates
-            this.geneSet1.geneX.absolutePosition = params.x;
-            this.geneSet1.geneY.absolutePosition = params.y;
-            this.geneSet2.geneX.absolutePosition = params.x;
-            this.geneSet2.geneY.absolutePosition = params.y;
         }
     }
 

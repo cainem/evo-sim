@@ -132,16 +132,17 @@ export class Simulation {
     for (const [regionIndex, organisms] of regionMap.entries()) {
       const region = this.regions[regionIndex];
       const stats = region.getStatistics();
-      const currentOrganismCount = organisms.length;
       const carryingCapacity = stats.carryingCapacity;
+      // Count total organisms in region (including those marked for death)
+      const totalCount = organisms.length;
+      // Compute living organisms (exclude those marked for death)
+      const livingOrganisms = organisms.filter(org => !org.isDead());
+      const livingCount = livingOrganisms.length;
       
-      // Count living organisms (not marked for death) for population comparison
-      const livingOrganismCount = organisms.filter(org => !org.isDead()).length;
-      
-      // Only process regions where living count is less than carrying capacity
-      if (livingOrganismCount < carryingCapacity && currentOrganismCount > 0) {
-        // Calculate target reproductions based on living organisms (as per updated PDD)
-        const targetReproductions = carryingCapacity - livingOrganismCount;
+      // Only process reproduction if there are organisms present and living count is below capacity
+      if (livingCount < carryingCapacity && totalCount > 0) {
+        // Calculate target reproductions based on living organisms
+        const targetReproductions = carryingCapacity - livingCount;
         
         // Filter eligible parents (RL >= 1)
         const eligibleParents = organisms.filter(org => org.getRoundsLived() >= 1);
@@ -149,7 +150,7 @@ export class Simulation {
         if (eligibleParents.length > 0) {
           // Sort by height at their position, using random for ties
           if (!this.config.isTestEnvironment) {
-            console.log(`\n=== REGION ${regionIndex} REPRODUCTION (Capacity: ${carryingCapacity}, Current: ${livingOrganismCount}) ===`);
+            console.log(`\n=== REGION ${regionIndex} REPRODUCTION (Capacity: ${carryingCapacity}, Current: ${livingCount}) ===`);
             console.log(`Eligible parents: ${eligibleParents.length}`);
           }
           

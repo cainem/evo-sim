@@ -69,11 +69,12 @@ Each round proceeds as follows:
 2.  **Death (a):** Identify and mark for death organisms where `RoundsLived` >= `Config.MaxLifeSpan`.
 3.  **Reproduction Phase (Region-Based):**
     * For each Region:
-        * Identify current organisms `n` within the region that have not been marked for death.
+        * Identify current living organisms `n` within the region (excluding those marked for death).
+        * Identify total organisms `t` within the region (including those marked for death).
         * Determine the region's `CarryingCapacity` `m` (calculated at startup).
-        * If `n < m` and `n > 0`:
+        * If `n < m` and `t > 0`:
             * Calculate target reproductions: `q = m - n`.
-            * Filter organisms: Select only those with `RoundsLived` >= 1. Let this count be `n_eligible`. Do *not* include organisms marked for death in this eligible list. (*Correction from original PDD based on clarification*)
+            * Filter eligible parents: Select organisms with `RoundsLived` >= 1; organisms marked for death are still eligible for reproduction.
             * Sort eligible organisms by the height `f(x, y)` at their position (descending). Handle ties pseudo-randomly.
             * Select the top `min(q, n_eligible)` organisms for reproduction.
             * Execute reproduction based on the active organism type's rules (see Section 5), generating offspring.
