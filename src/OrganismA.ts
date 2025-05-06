@@ -121,16 +121,18 @@ export class OrganismA extends BaseOrganism {
     const singleStepXDistance = newX - this.getPosition().x;
     const singleStepYDistance = newY - this.getPosition().y;
 
-    // Calculate cumulative offspring distance based on PDD and clamp to [-5, 5]
+    // Calculate cumulative offspring distance based on PDD and clamp to region half-size
+    const regionSize = Math.floor(config.worldSize / Math.sqrt(config.regionCount));
+    const halfRegionSize = Math.floor(regionSize / 2);
     const cumulativeOffspringXDistance = OrganismA.clampToRange(
       this.offspringsXDistance + newDeliberateMutationX,
-      -5,
-      5
+      -halfRegionSize,
+      halfRegionSize
     );
     const cumulativeOffspringYDistance = OrganismA.clampToRange(
       this.offspringsYDistance + newDeliberateMutationY,
-      -5,
-      5
+      -halfRegionSize,
+      halfRegionSize
     );
 
     /* istanbul ignore next */

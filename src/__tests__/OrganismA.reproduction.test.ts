@@ -7,6 +7,7 @@ describe('Organism Reproduction', () => {
   let config: Config;
   let worldMap: WorldMap;
   let random: SeededRandom;
+  let halfRegionSize: number;
   const testSeed = 12345;
 
   beforeEach(() => {
@@ -15,10 +16,12 @@ describe('Organism Reproduction', () => {
       startingOrganisms: 100,
       maxLifeSpan: 10,
       deliberateMutationProbability: 0.5,
-      randomSeed: testSeed
+      randomSeed: testSeed,
+      regionCount: 100
     });
     random = new SeededRandom(testSeed);
     worldMap = new WorldMap(config, random);
+    halfRegionSize = Math.floor((config.worldSize / Math.sqrt(config.regionCount)) / 2);
   });
 
   describe('State Copying', () => {
@@ -110,43 +113,43 @@ describe('Organism Reproduction', () => {
   });
 
   describe('Clamping of Offspring Distances', () => {
-    it('should clamp offspringsXDistance to -5 if parent+mutation < -5', () => {
+    it('should clamp offspringsXDistance to -halfRegionSize if parent+mutation < -halfRegionSize', () => {
       const parent = new OrganismA({
         x: 0,
         y: 0,
         roundsLived: 0,
         deliberateMutationX: 1,
         deliberateMutationY: 0,
-        offspringsXDistance: -6,
+        offspringsXDistance: -halfRegionSize - 1,
         offspringsYDistance: 0
       }, config);
-      // Force mutation to +1 (so -6 + 1 = -5, but let's test -6 + 0 = -6)
+      // Force mutation to +1 (so -halfRegionSize - 1 + 1 = -halfRegionSize, but let's test -halfRegionSize - 1 + 0 = -halfRegionSize - 1)
       const noMutationRandom = new SeededRandom(testSeed);
       jest.spyOn(noMutationRandom, 'nextBoolean').mockReturnValue(false);
       const offspring = parent.reproduce([parent], 0, config, noMutationRandom, worldMap);
       const params = offspring[0].getParameters();
-      expect(params.offspringsXDistance).toBe(-5);
+      expect(params.offspringsXDistance).toBe(-halfRegionSize);
     });
-    it('should clamp offspringsXDistance to 5 if parent+mutation > 5', () => {
+    it('should clamp offspringsXDistance to halfRegionSize if parent+mutation > halfRegionSize', () => {
       const parent = new OrganismA({
         x: 0,
         y: 0,
         roundsLived: 0,
         deliberateMutationX: 1,
         deliberateMutationY: 0,
-        offspringsXDistance: 6,
+        offspringsXDistance: halfRegionSize + 1,
         offspringsYDistance: 0
       }, config);
-      // Force mutation to +1 (so 6 + 1 = 7)
+      // Force mutation to +1 (so halfRegionSize + 1 + 1 = halfRegionSize + 2)
       const mutationRandom = new SeededRandom(testSeed);
       jest.spyOn(mutationRandom, 'nextBoolean')
         .mockReturnValueOnce(false) // X: no mutation
         .mockReturnValueOnce(false); // Y: no mutation
       const offspring = parent.reproduce([parent], 0, config, mutationRandom, worldMap);
       const params = offspring[0].getParameters();
-      expect(params.offspringsXDistance).toBe(5);
+      expect(params.offspringsXDistance).toBe(halfRegionSize);
     });
-    it('should clamp offspringsYDistance to -5 if parent+mutation < -5', () => {
+    it('should clamp offspringsYDistance to -halfRegionSize if parent+mutation < -halfRegionSize', () => {
       const parent = new OrganismA({
         x: 0,
         y: 0,
@@ -154,15 +157,15 @@ describe('Organism Reproduction', () => {
         deliberateMutationX: 0,
         deliberateMutationY: 1,
         offspringsXDistance: 0,
-        offspringsYDistance: -6
+        offspringsYDistance: -halfRegionSize - 1
       }, config);
       const noMutationRandom = new SeededRandom(testSeed);
       jest.spyOn(noMutationRandom, 'nextBoolean').mockReturnValue(false);
       const offspring = parent.reproduce([parent], 0, config, noMutationRandom, worldMap);
       const params = offspring[0].getParameters();
-      expect(params.offspringsYDistance).toBe(-5);
+      expect(params.offspringsYDistance).toBe(-halfRegionSize);
     });
-    it('should clamp offspringsYDistance to 5 if parent+mutation > 5', () => {
+    it('should clamp offspringsYDistance to halfRegionSize if parent+mutation > halfRegionSize', () => {
       const parent = new OrganismA({
         x: 0,
         y: 0,
@@ -170,7 +173,7 @@ describe('Organism Reproduction', () => {
         deliberateMutationX: 0,
         deliberateMutationY: 1,
         offspringsXDistance: 0,
-        offspringsYDistance: 6
+        offspringsYDistance: halfRegionSize + 1
       }, config);
       const mutationRandom = new SeededRandom(testSeed);
       jest.spyOn(mutationRandom, 'nextBoolean')
@@ -178,7 +181,7 @@ describe('Organism Reproduction', () => {
         .mockReturnValueOnce(false); // Y: no mutation
       const offspring = parent.reproduce([parent], 0, config, mutationRandom, worldMap);
       const params = offspring[0].getParameters();
-      expect(params.offspringsYDistance).toBe(5);
+      expect(params.offspringsYDistance).toBe(halfRegionSize);
     });
     it('should not clamp if within range', () => {
       const parent = new OrganismA({

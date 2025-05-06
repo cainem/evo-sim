@@ -102,7 +102,7 @@ Reproduction rules vary by organism type. Offspring always start with `RoundsLiv
 * **Offspring Distance Update:**
     * `Child.OffspringsXDistance = Parent.OffspringsXDistance + Parent.DeliberateMutationX`.
     * `Child.OffspringsYDistance = Parent.OffspringsYDistance + Parent.DeliberateMutationY`.
-    * `Child.OffspringsXDistance`/`Child.OffspringsYDistance` cannot be less than -5 or greater than 5.
+    * `Child.OffspringsXDistance`/`Child.OffspringsYDistance` magnitude cannot be greater than `regionsize / 2`.
 * **Offspring Placement:**
     * Start at parent's (x, y).
     * Calculate offset:
