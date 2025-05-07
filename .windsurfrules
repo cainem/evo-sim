@@ -1,5 +1,6 @@
 # Technical stack
 
+- Built on windows.
 - Typescript and nodejs for the backend
 - Three.js library for all graphics
 - Jest for written in Typescript testing

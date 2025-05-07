@@ -209,39 +209,41 @@ export class Simulation {
             eligibleParents.length
           );
 
-          // Create offspring
+          // Pass only selected parents into reproduce()
+          const selectedParents = eligibleParents.slice(0, numParents);
+
           if (!this.config.isTestEnvironment) {
             console.log(`Selected ${numParents} parents for reproduction`);
           }
-          for (let i = 0; i < numParents; i++) {
+          for (let i = 0; i < selectedParents.length; i++) {
             let offspringList: BaseOrganism[] = []; // Initialize offspringList
+            const parent = selectedParents[i];
 
-            if (eligibleParents[i] instanceof OrganismA) {
-              // OrganismA reproduction
-              offspringList = (eligibleParents[i] as OrganismA).reproduce(
-                eligibleParents,
+            if (parent instanceof OrganismA) {
+              offspringList = (parent as OrganismA).reproduce(
+                selectedParents,
                 i,
                 this.config,
                 this.random,
                 this.worldMap
               );
-            } else if (eligibleParents[i] instanceof OrganismB) { // Handle OrganismB
-              offspringList = (eligibleParents[i] as OrganismB).reproduce(
-                eligibleParents,
+            } else if (parent instanceof OrganismB) { // Handle OrganismB
+              offspringList = (parent as OrganismB).reproduce(
+                selectedParents,
                 i,
                 this.config,
                 this.random,
                 this.worldMap
               );
             } else { // Handle OrganismC (must be 'C' if not 'A' or 'B')
-              offspringList = (eligibleParents[i] as OrganismC).reproduce(
-                eligibleParents,
+              offspringList = (parent as OrganismC).reproduce(
+                selectedParents,
                 i,
                 this.config,
                 this.random
               );
             }
-            
+
             // Iterate through the returned offspring list
             for (const individualOffspring of offspringList) {
               // Ensure each offspring has valid coordinates before adding
