@@ -116,38 +116,6 @@ export class OrganismC extends BaseOrganism {
             const offspringAPosition = this.determinePlacement(offspringAGeneSet1, offspringAGeneSet2, config);
             const offspringBPosition = this.determinePlacement(offspringBGeneSet1, offspringBGeneSet2, config);
 
-            // Validate displacement of offspring A
-            {
-                const dxRaw = Math.abs(offspringAPosition.x - parentPosition.x);
-                const dyRaw = Math.abs(offspringAPosition.y - parentPosition.y);
-                const dx = Math.min(dxRaw, config.worldSize - dxRaw);
-                const dy = Math.min(dyRaw, config.worldSize - dyRaw);
-                const distSq = dx * dx + dy * dy;
-                const maxSq = (2 * regionSize) * (2 * regionSize);
-                if (!config.isTestEnvironment) {
-                    console.log(`[C][reproduce][A] dxRaw=${dxRaw}, dyRaw=${dyRaw}, dx=${dx}, dy=${dy}, distSq=${distSq}, maxSq=${maxSq}`);
-                }
-                if (distSq > maxSq) {
-                    throw new Error(`Offspring too far from parent: squared distance ${distSq} > ${maxSq}`);
-                }
-            }
-
-            // Validate displacement of offspring B
-            {
-                const dxRaw = Math.abs(offspringBPosition.x - parentPosition.x);
-                const dyRaw = Math.abs(offspringBPosition.y - parentPosition.y);
-                const dx = Math.min(dxRaw, config.worldSize - dxRaw);
-                const dy = Math.min(dyRaw, config.worldSize - dyRaw);
-                const distSq = dx * dx + dy * dy;
-                const maxSq = (2 * regionSize) * (2 * regionSize);
-                if (!config.isTestEnvironment) {
-                    console.log(`[C][reproduce][B] dxRaw=${dxRaw}, dyRaw=${dyRaw}, dx=${dx}, dy=${dy}, distSq=${distSq}, maxSq=${maxSq}`);
-                }
-                if (distSq > maxSq) {
-                    throw new Error(`Offspring too far from parent: squared distance ${distSq} > ${maxSq}`);
-                }
-            }
-
             offspringList.push(new OrganismC({ ...offspringAPosition, roundsLived: 0 }, config, random, offspringAGeneSet1, offspringAGeneSet2));
             offspringList.push(new OrganismC({ ...offspringBPosition, roundsLived: 0 }, config, random, offspringBGeneSet1, offspringBGeneSet2));
 
@@ -163,22 +131,6 @@ export class OrganismC extends BaseOrganism {
             offspringGeneSet2.geneY = this.mutateGeneInternal(offspringGeneSet2.geneY, config, random, regionSize);
 
             const offspringPosition = this.determinePlacement(offspringGeneSet1, offspringGeneSet2, config);
-
-            // Validate displacement of asexual offspring
-            {
-                const dxRaw = Math.abs(offspringPosition.x - parentPosition.x);
-                const dyRaw = Math.abs(offspringPosition.y - parentPosition.y);
-                const dx = Math.min(dxRaw, config.worldSize - dxRaw);
-                const dy = Math.min(dyRaw, config.worldSize - dyRaw);
-                const distSq = dx * dx + dy * dy;
-                const maxSq = (2 * regionSize) * (2 * regionSize);
-                if (!config.isTestEnvironment) {
-                    console.log(`[C][reproduce][Asexual] dxRaw=${dxRaw}, dyRaw=${dyRaw}, dx=${dx}, dy=${dy}, distSq=${distSq}, maxSq=${maxSq}`);
-                }
-                if (distSq > maxSq) {
-                    throw new Error(`Offspring too far from parent: squared distance ${distSq} > ${maxSq}`);
-                }
-            }
 
             offspringList.push(new OrganismC({ ...offspringPosition, roundsLived: 0 }, config, random, offspringGeneSet1, offspringGeneSet2));
         } else {
