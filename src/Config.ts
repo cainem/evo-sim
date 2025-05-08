@@ -10,7 +10,7 @@ export class Config {
     public readonly deliberateMutationProbability: number = 0.2,
     public readonly regionCount: number = 900, // Must be a perfect square (10x10)
     public readonly isTestEnvironment: boolean = false,
-    public readonly organismType: 'A' | 'B' | 'C' = 'A'
+    public readonly organismType: 'A' | 'B' | 'C' | 'D' = 'A'
   ) {}
 
   public static getInstance(): Config {

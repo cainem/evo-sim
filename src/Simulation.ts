@@ -4,6 +4,7 @@ import { SeededRandom } from './utils/SeededRandom';
 import { OrganismA } from './OrganismA';
 import { OrganismB } from './OrganismB';
 import { OrganismC } from './OrganismC'; // Import OrganismC
+import { OrganismD } from './OrganismD'; // Import OrganismD
 import { OrganismParameters } from './types/OrganismParameters';
 import { Region } from './Region';
 import { BaseOrganism } from './BaseOrganism';
@@ -43,8 +44,10 @@ export class Simulation {
         this.organisms.push(new OrganismA(params, this.config, this.random));
       } else if (this.config.organismType === 'B') { // Handle OrganismB
         this.organisms.push(new OrganismB({ x: centerX, y: centerY }, this.config, this.random));
-      } else { // Handle OrganismC (must be 'C' if not 'A' or 'B')
+      } else if (this.config.organismType === 'C') {
         this.organisms.push(new OrganismC({ x: centerX, y: centerY }, this.config, this.random));
+      } else {
+        this.organisms.push(new OrganismD({ x: centerX, y: centerY }, this.config, this.random));
       }
     }
   }
@@ -235,8 +238,15 @@ export class Simulation {
                 this.random,
                 this.worldMap
               );
-            } else { // Handle OrganismC (must be 'C' if not 'A' or 'B')
+            } else if (parent instanceof OrganismC) {
               offspringList = (parent as OrganismC).reproduce(
+                selectedParents,
+                i,
+                this.config,
+                this.random
+              );
+            } else {
+              offspringList = (parent as OrganismD).reproduce(
                 selectedParents,
                 i,
                 this.config,

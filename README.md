@@ -24,13 +24,14 @@ EvoSim is a round-based digital simulation modelling a 2D world with varying hei
     * `OrganismA` (Original): reproduction rules as described in section 5.1.
     * `OrganismB` (Random): reproduction rules as described in section 5.2.
     * `OrganismC` (Genetic): reproduction rules as described in section 5.3.
+    * `OrganismD` (Probabilistic Genetic): reproduction rules as described in section 5.4.
     * Only one organism type is active per simulation, selected via a drop-down prior to startup.
 
 * **Initial State:**
     * `Config.StartingOrganisms` (Initial: 5000) are created at the start.
     * All start at the center coordinates: (floor(`Config.WorldSize` / 2) - 1, floor(`Config.WorldSize` / 2) - 1).
     * Initial `RoundsLived`: Integer. Initialized randomly between 0 and `Config.MaxLifeSpan` - 1 for starting organisms; 0 for offspring.
-    * Initial Gene State (for `OrganismC`): Genes are initialized with pseudo-random values within their allowed ranges (see below) using the seeded PRNG.
+    * Initial Gene State (for `OrganismC` and `OrganismD`): Genes are initialized with pseudo-random values within their allowed ranges (see below) using the seeded PRNG.
 
 * **Common Internal State (All Types):**
     * `position`: Current (x, y) coordinates on the world surface.
@@ -44,8 +45,8 @@ EvoSim is a round-based digital simulation modelling a 2D world with varying hei
         * `OffspringsYDistance`: Integer. Initialized to 0.
     * **OrganismB Specific State:**
         * None beyond common state.
-    * **OrganismC Specific State (Genes):**
-        * Organisms of type C have 2 sets of 2 genes (GeneX and GeneY per set).
+    * **OrganismC and OrganismD Specific State (Genes):**
+        * Organisms of type C and D have 2 sets of 2 genes (GeneX and GeneY per set).
             ```
             Set 1: GeneX(1), GeneY(1)
             Set 2: GeneX(2), GeneY(2)
@@ -122,12 +123,9 @@ Reproduction rules vary by organism type. Offspring always start with `RoundsLiv
 ### 5.3. OrganismC Reproduction Rules
 
 * **Reproduction Mode Selection:**
-    * Eligible OrganismC instances selected for reproduction in a region are processed based on their order in the height-sorted list.
-    * Pairing logic uses 1-based positions: the first organism is at position 1, the second at position 2, etc.
-    * If an organism is at an even position `n` (i.e., its 0-based `currentIndex` is odd, e.g., 1, 3, 5...), it reproduces **sexually** with the organism at position `n-1` (i.e., `currentIndex - 1`).
-    * If the list has an odd number of organisms, the last organism reproduces asexually.
-    * The last organism in an odd-length list is always at an odd position `n` (i.e., its 0-based `currentIndex` is even). It reproduces **asexually**.
-    * Result: Organisms at odd indices (1, 3, ...) reproduce sexually. The organism at an even index (0, 2, ...) reproduces asexually *only if* it's the last one in the list.
+    * Process eligible OrganismC in height-descending order in consecutive pairs (positions 1&2, 3&4, …).
+    * Each complete pair reproduces **sexually**, producing two offspring.
+    * If one organism remains unpaired at the end, **only that organism** reproduces **asexually**, producing one offspring.
 
 * **Sexual Reproduction:**
     * Produces **two** offspring per pair of parents (a and b).
@@ -154,6 +152,36 @@ Reproduction rules vary by organism type. Offspring always start with `RoundsLiv
     * **Gene Inheritance:** The offspring inherits an exact copy of the single parent's genes (Set 1 and Set 2 are identical copies of the parent's Set 1 and Set 2).
     * **Mutation Process:** The same mutation process described for sexual reproduction (recalculation of `DeliberateMutation` flag and potential subsequent changes to other gene properties if the flag is ON) is applied independently to each gene of the single offspring.
     * **Offspring Placement (X, Y Coordinates):** The placement is determined using the same dominance comparison logic as in sexual reproduction (comparing Set 1 vs Set 2 genes for X and Y, using `AbsolutePosition` of the dominant gene, Set 1 winning ties), even though the initial gene sets are identical copies from the parent.
+
+### 5.4. OrganismD Reproduction Rules
+
+OrganismD shares the same genetic structure (Section 3), reproduction mode selection (sexual/asexual pairing as per Section 5.3), gene mixing (for sexual reproduction), gene inheritance (for asexual reproduction), and mutation processes as OrganismC. The sole difference lies in the determination of offspring placement (X, Y coordinates).
+
+* **Sexual Reproduction:**
+    * Produces **two** offspring per pair of parents (a and b).
+    * **Gene Mixing:** Identical to OrganismC (Section 5.3).
+    * **Mutation Process:** Identical to OrganismC (Section 5.3), applied independently to each gene in each offspring after mixing.
+    * **Offspring Placement (X, Y Coordinates):** For each offspring, its final (x, y) position is determined by applying a `DominanceOutcomeDeterminator` function independently for its X and Y coordinates using the offspring's (potentially mutated) genes.
+        * **X Coordinate:** The `DominanceOutcomeDeterminator` function is called with the `DominanceFactor` of the offspring's `GeneX(Set1)` (as DF1) and `GeneX(Set2)` (as DF2). The `AbsolutePosition` from the gene indicated by the function's return value is used as the offspring's X coordinate.
+        * **Y Coordinate:** The `DominanceOutcomeDeterminator` function is called (with a new PRNG roll) with the `DominanceFactor` of the offspring's `GeneY(Set1)` (as DF1) and `GeneY(Set2)` (as DF2). The `AbsolutePosition` from the gene indicated by the function's return value is used as the offspring's Y coordinate.
+        * **`DominanceOutcomeDeterminator(DF1, DF2)` Function Logic:**
+            1.  This function utilizes the simulation's single seeded PRNG.
+            2.  Let M be the floating-point midpoint: `(DF1 + DF2) / 2.0`.
+            3.  A pseudo-random integer, R, is generated from the range [0, 10000] (inclusive) using the PRNG.
+            4.  Decision:
+                * If `DF1 == DF2`:
+                    * If R < M, the gene corresponding to DF1 (the first parameter) is chosen.
+                    * Else (R >= M), the gene corresponding to DF2 (the second parameter) is chosen.
+                * Else (`DF1 != DF2`):
+                    * If R < M, the gene with the numerically lower dominance factor (between the one corresponding to DF1 and the one corresponding to DF2) is chosen.
+                    * Else (R >= M), the gene with the numerically higher dominance factor is chosen.
+            5.  The function returns an indicator (e.g., an enum value like `CHOSEN_GENE_SET1` or `CHOSEN_GENE_SET2`, or simply 0 for the first parameter's gene and 1 for the second) to the caller, which then uses the `AbsolutePosition` of that chosen gene.
+
+* **Asexual Reproduction:**
+    * Produces **one** offspring.
+    * **Gene Inheritance:** Identical to OrganismC (Section 5.3). The offspring inherits an exact copy of the single parent's genes.
+    * **Mutation Process:** Identical to OrganismC (Section 5.3). The same mutation process is applied independently to each gene of the single offspring.
+    * **Offspring Placement (X, Y Coordinates):** The placement is determined using the same `DominanceOutcomeDeterminator` logic described above for OrganismD's sexual reproduction. This is applied independently to the offspring's (post-mutation) GeneX pair (from its Set1 and Set2) and GeneY pair (from its Set1 and Set2) to determine the final X and Y coordinates.
 
 ## 6. Regions
 
@@ -186,7 +214,7 @@ Consolidate all simulation parameters:
 * `RandomSeed` (Initial: 9969) - Crucial for reproducibility
 * `StartingOrganisms` (Initial: 5000)
 * `MaxLifeSpan` (Initial: 10)
-* `DeliberateMutationProbability` (Initial: 0.2) - Used by OrganismA and OrganismC
+* `DeliberateMutationProbability` (Initial: 0.2) - Used by OrganismA, OrganismC, and OrganismD
 * `RegionCount` (Initial: 900)
 * (Internal/Derived): `RegionSize`, Gaussian parameters for height map, etc.
 
